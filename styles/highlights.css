@@ -1,0 +1,32 @@
+/* ============================================================
+   highlights.css — text selection toolbar, colored highlights,
+   highlight list rows, note editor
+   ============================================================ */
+
+/* Floating toolbar after selecting text (new) or tapping a highlight (edit) */
+#hbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:7;display:flex;align-items:center;gap:8px;background:var(--ink);color:var(--bg);padding:8px 12px;border-radius:999px;box-shadow:0 8px 30px #0005;max-width:calc(100% - 24px)}
+#hbar .lb{font:600 12px Inter,sans-serif;opacity:.7}
+#hbar button{font:600 13px Inter,sans-serif;padding:6px 8px;border-radius:999px}
+
+/* Color dots */
+.dot{display:inline-block;width:26px;height:26px;border-radius:50%;padding:0!important;border:2px solid #fff8!important}
+.dot.y{background:#ffd60a}.dot.g{background:#5fd27f}.dot.p{background:#ff7aa2}.dot.b{background:#5aa2ff}
+
+/* Highlighted text inside the book */
+#book mark.hm{background:rgba(255,214,10,.42);color:inherit;border-radius:4px;padding:1px 0;cursor:pointer;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#book mark.hm.g{background:rgba(52,199,89,.34)}
+#book mark.hm.p{background:rgba(255,105,150,.32)}
+#book mark.hm.b{background:rgba(70,140,255,.32)}
+#book mark.hm.nt{box-shadow:0 2px 0 var(--acc)}
+#book mark.hm.flash{outline:3px solid var(--acc);outline-offset:2px}
+
+/* Rows in the Highlights & notes sheet */
+.hi{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.hi .dot{width:12px;height:12px;flex:none;margin-top:7px;border-width:0!important}
+.hc{font:600 11px Inter,sans-serif;color:var(--mute);margin-bottom:3px}
+.ht{font:400 16px/1.5 Newsreader,Georgia,serif}
+.hn{font:italic 14px/1.4 Inter,sans-serif;color:var(--acc);margin-top:5px}
+
+/* Note editor sheet */
+#nt{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font:16px/1.5 Inter,sans-serif;background:var(--bg);color:var(--ink);margin-bottom:12px}
+.hq{font:italic 15px/1.5 Newsreader,Georgia,serif;color:var(--mute);margin-bottom:12px;max-height:5em;overflow:auto}

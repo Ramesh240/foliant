@@ -1,0 +1,41 @@
+/* ============================================================
+   content.css — rendered book blocks: table of contents, lists,
+   callouts, code, numbered steps, figures + lightbox
+   ============================================================ */
+
+/* Embedded table of contents (dot leaders rendered as dotted borders) */
+#book .tl{list-style:none;padding:0;margin:0 0 1.6em}
+#book .tl li{display:flex;align-items:baseline;gap:12px;background:none;border:0;border-radius:0;border-bottom:1px dotted var(--line);padding:9px 0;margin:0}
+#book .tl li:before{content:none}
+#book .tl li.sub{padding-left:22px;font-size:.92em;color:var(--mute)}
+#book .tl .tt{flex:1}
+#book .tl .pg{font:600 .8em Inter,sans-serif;color:var(--mute);font-variant-numeric:tabular-nums}
+#book .tl small{display:block;font-size:.76em;line-height:1.45;color:var(--mute);margin-top:3px}
+#book .tl li.part{display:block;border:0;padding:22px 0 4px}
+#book .tl li.part .tt{font:700 1.08em Fraunces,serif;color:var(--ink)}
+#book .tl li.part small{font:400 .8em Newsreader,serif}
+#book .tl li.lk{cursor:pointer}
+#book .tl li.lk .tt{color:var(--acc);font-weight:500}
+
+/* Numbered steps: paragraphs that follow a "N.M" number line */
+#book p.step{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px 12px 60px;margin-left:0;margin-right:0}
+#book .nb{position:absolute;left:12px;top:12px;font:700 13px Inter,sans-serif;color:var(--acc);background:var(--acc2);border-radius:8px;padding:3px 8px}
+
+/* Callouts: "Note: …", "Tip: …", "Warning: …" paragraphs */
+#book .co{background:var(--acc2);border-left:4px solid var(--acc);border-radius:4px 14px 14px 4px;padding:14px 18px;margin:1.4em 0;font-size:.95em}
+#book .co strong{display:block;font:600 14px Inter,sans-serif;color:var(--acc);margin-bottom:2px;text-transform:none}
+
+/* Code blocks rendered from monospace-font rows, with a Copy button */
+#book pre{position:relative;background:var(--code);color:var(--codeink);border-radius:14px;padding:18px 16px;overflow-x:auto;font:400 14px/1.6 ui-monospace,Menlo,Consolas,monospace;margin:1.4em 0}
+#book pre button{position:sticky;float:right;top:0;right:0;font:600 12px Inter;background:#ffffff22;color:#fff;border-radius:8px;padding:4px 10px}
+
+/* Figures: cropped renders of image XObjects found on the PDF page */
+#book .fg{margin:1.8em 0}
+#book .fi{background:#fff;border-radius:14px;padding:8px;box-shadow:0 2px 14px #0002;min-height:60px;cursor:zoom-in}
+#book .fi img{display:block;width:100%;height:auto;border-radius:8px}
+#book .ph{padding:38px 0;text-align:center;color:#888;font:14px Inter,sans-serif}
+#book figcaption{font:italic .86em/1.5 Newsreader,Georgia,serif;color:var(--mute);margin-top:10px;padding:0 4px}
+
+/* Full-screen image lightbox */
+#lb{position:fixed;inset:0;z-index:20;background:#000d;display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
+#lb img{max-width:100%;max-height:100%;background:#fff;border-radius:8px}

@@ -1,0 +1,57 @@
+name: Android release build
+
+# Builds the signed Play-Store AAB (and an installable APK) on every push to
+# main, and on manual runs from the Actions tab. Signing material comes from
+# repository secrets — see docs/PUBLISHING.md for how to create them.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Assemble web bundle
+        run: node tools/copy-www.js
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Decode signing keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > android/app/foliant-release.keystore
+
+      - name: Build signed AAB + APK
+        working-directory: android
+        env:
+          CI_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          CI_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          CI_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          ./gradlew bundleRelease assembleRelease
+
+      - name: Upload AAB (Play Store)
+        uses: actions/upload-artifact@v4
+        with:
+          name: foliant-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload APK (direct install)
+        uses: actions/upload-artifact@v4
+        with:
+          name: foliant-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk

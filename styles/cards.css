@@ -1,0 +1,40 @@
+/* ============================================================
+   cards.css — in-page Q&A cards and the full-screen review deck
+   ============================================================ */
+
+/* In-page card: tap to reveal, then rate "Got it" / "Review again" */
+#book .qa{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:6px 18px 18px 6px;padding:18px 20px;margin:1.6em 0;cursor:pointer;transition:border-color .2s}
+#book .qa .q{font:600 1.08em/1.4 Fraunces,serif}
+#book .qa .rv{margin-top:10px;font:600 13px Inter,sans-serif;color:var(--acc)}
+#book .qa.open .rv{display:none}
+#book .qa .a{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+#book .qa .a>div{overflow:hidden}
+#book .qa.open .a{grid-template-rows:1fr}
+#book .qa.open .a>div{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+#book .qa .a p{margin-bottom:.4em}
+#book .qa .rate{display:none;gap:8px;margin-top:12px}
+#book .qa.open .rate{display:flex}
+#book .qa .rate button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);font:600 14px Inter,sans-serif}
+
+/* Rating feedback states */
+#book .qa.done{border-left-color:#3d9a6a;opacity:.75}
+#book .qa.done .rv:after{content:" — got it"}
+#book .qa.again{border-left-color:#c4623c}
+#book .qa.again .rv:after{content:" — review again"}
+
+/* Review deck overlay */
+#rvw{position:fixed;inset:0;z-index:30;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px));overflow:auto}
+#rvw .rc{width:100%;max-width:560px;margin:auto}
+#rvw h4{font:700 28px Fraunces,serif;margin:0 0 8px}
+#rvw p{color:var(--mute);font:400 17px/1.5 Newsreader,serif;margin:0 0 18px}
+#rvw .pr{height:4px;background:var(--line);border-radius:4px;margin-bottom:18px}
+#rvw .pr i{display:block;height:100%;background:var(--acc);border-radius:4px}
+#rvw .cd{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:6px 20px 20px 6px;padding:22px;min-height:180px;cursor:pointer}
+#rvw .ct{font:600 12px Inter,sans-serif;color:var(--mute);margin-bottom:10px}
+#rvw .cd .q{font:600 1.3em/1.4 Fraunces,serif}
+#rvw .cd .a{margin-top:16px;padding-top:16px;border-top:1px dashed var(--line);font:400 1.1em/1.6 Newsreader,serif}
+#rvw .cd .a p{font:inherit;color:var(--ink);margin:0 0 .5em}
+#rvw .btn{display:block;width:100%;padding:15px;margin-top:10px;border-radius:14px;border:1px solid var(--line);background:var(--card);font:600 15px Inter,sans-serif}
+#rvw .btn.pri{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+#rvw .btn:disabled{opacity:.4}
+#rvw .two{display:flex;gap:10px}

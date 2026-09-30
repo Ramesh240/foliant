@@ -1,0 +1,21 @@
+/* ============================================================
+   home.css — landing screen with the PDF drop zone
+   ============================================================ */
+
+#home{
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:32px 22px;max-width:640px;margin:auto;
+}
+#home h1{font:700 clamp(40px,11vw,68px)/1 Fraunces,Georgia,serif;margin:0 0 14px;letter-spacing:-.02em}
+#home p{font:400 19px/1.55 Newsreader,Georgia,serif;color:var(--mute);margin:0 0 28px}
+
+#drop{
+  border:2px dashed var(--acc);border-radius:22px;padding:34px 20px;text-align:center;
+  background:var(--acc2);cursor:pointer;transition:.2s;
+}
+#drop.on{transform:scale(1.02);background:var(--card)}
+#drop b{display:block;font:700 22px Fraunces,serif;margin-bottom:6px}
+#drop span{color:var(--mute);font-size:14px}
+
+/* Status line for parse progress and error messages */
+#msg{margin-top:14px;font-size:14px;color:var(--acc);min-height:20px}

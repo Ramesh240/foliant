@@ -1,0 +1,34 @@
+/* ============================================================
+   base.css — design tokens, themes, resets, shared primitives
+   ============================================================ */
+
+/* Theme tokens. Switched via <html data-theme>: paper (default), sepia, night. */
+:root{
+  --bg:#f6f3ec; --ink:#22201c; --mute:#7a7468; --card:#fffdf8; --line:#e2dccd;
+  --acc:#2f5d50; --acc2:#e9efe9; --hi:#fff1b8; --code:#1e2b28; --codeink:#d9efe4;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="sepia"]{
+  --bg:#efe2c6; --ink:#3b2d1a; --mute:#8a7654; --card:#f6ebd2; --line:#dcc9a3;
+  --acc:#8a4b1f; --acc2:#ecdcb8; --hi:#f6d98a;
+}
+:root[data-theme="night"]{
+  --bg:#12161a; --ink:#dcdad2; --mute:#8b9096; --card:#1a2025; --line:#2a3238;
+  --acc:#7fc8a9; --acc2:#1f2a28; --hi:#4a4320; --code:#0c1113;
+}
+/* Follow the OS dark preference unless the user picked an explicit light theme. */
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]):not([data-theme="sepia"]):not([data-theme="paper"]){
+    --bg:#12161a; --ink:#dcdad2; --mute:#8b9096; --card:#1a2025; --line:#2a3238;
+    --acc:#7fc8a9; --acc2:#1f2a28; --hi:#4a4320; --code:#0c1113;
+  }
+}
+
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,label:focus-within{outline:2px solid var(--acc);outline-offset:2px}
+.hide{display:none!important}

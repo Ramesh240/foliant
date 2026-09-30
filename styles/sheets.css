@@ -1,0 +1,23 @@
+/* ============================================================
+   sheets.css — bottom sheets, settings sheet, chapter list, veil
+   ============================================================ */
+
+/* Sliding bottom sheet (chapters, settings, highlights, note editor) */
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--card);
+  border-top:1px solid var(--line);border-radius:22px 22px 0 0;
+  padding:20px 22px calc(24px + env(safe-area-inset-bottom,0px));
+  max-height:75vh;overflow:auto;box-shadow:0 -12px 40px #0003;
+}
+.sheet h4{font:700 20px Fraunces,serif;margin:0 0 14px}
+.sheet .row{display:flex;gap:8px;margin-bottom:18px;align-items:center}
+.sheet .row button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);font-weight:600}
+.sheet .row button.sel{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.sheet input[type=range]{flex:1;accent-color:var(--acc)}
+
+/* Chapter list inside the TOC sheet */
+.toc button{display:block;width:100%;text-align:left;padding:12px 4px;border-bottom:1px solid var(--line);font:500 17px Newsreader,serif}
+.toc button.cur{color:var(--acc);font-weight:700}
+
+/* Dimmed backdrop behind an open sheet */
+#veil{position:fixed;inset:0;background:#0006;z-index:8}

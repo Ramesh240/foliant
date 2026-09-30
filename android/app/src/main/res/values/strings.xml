@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Foliant</string>
+    <string name="title_activity_main">Foliant</string>
+    <string name="package_name">com.ramesh.foliant</string>
+    <string name="custom_url_scheme">com.ramesh.foliant</string>
+</resources>

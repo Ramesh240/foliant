@@ -1,0 +1,21 @@
+{
+  "name": "foliant",
+  "version": "1.0.0",
+  "description": "Foliant — turn any PDF into a book. Client-side PDF reader with chapters, highlights and flashcards.",
+  "private": true,
+  "scripts": {
+    "serve": "node tools/serve.js",
+    "sample": "node tools/make_sample_pdf.js",
+    "icons": "node tools/make_icons.js",
+    "www": "node tools/copy-www.js",
+    "cap:sync": "npm run www && cap sync android",
+    "android": "npm run cap:sync && cap open android"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0"
+  }
+}
