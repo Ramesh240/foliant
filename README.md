@@ -81,7 +81,7 @@ page. (Scanned PDFs need OCR first — Foliant reads text, not pictures of text.
 | Target | How |
 |---|---|
 | **Web (GitHub Pages)** | Automatic via `.github/workflows/pages.yml`; enable Pages → Source: GitHub Actions. Installable PWA, works offline after first load. |
-| **Android (Play Store)** | `.github/workflows/android.yml` builds a signed AAB on every push; see [docs/PUBLISHING.md](docs/PUBLISHING.md) for keystore setup and the Play Console checklist. Local device testing: `npm run cap:sync` then open `android/` in Android Studio. |
+| **Android (Play Store)** | `.github/workflows/android.yml` builds a signed AAB on every push; for keystore setup and the Play Console checklist. Local device testing: `npm run cap:sync` then open `android/` in Android Studio. |
 
 ## Data & privacy
 
