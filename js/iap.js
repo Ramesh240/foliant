@@ -77,7 +77,8 @@ function iapUnlockSheet(f) {
       ? '<div class="row"><button class="sel" id="iapClose">You own Premium ✓</button></div>'
       : onAndroid
         ? '<div class="row"><button class="sel" id="iapBuy">Unlock with Google Play</button></div>' +
-          '<div class="row"><button id="iapRestore">Restore purchase</button></div>'
+          '<div class="row"><button id="iapRestore">Restore purchase</button></div>' +
+          (bridge ? '' : '<div class="nnv">Store sign-in is unavailable in this build — install the latest app release from Play to purchase.</div>')
         : '<div class="row"><button class="sel" id="iapClose">Got it</button></div>' +
           '<div class="nnv">Premium is a one-time ' + esc(IAP_PRICE) + ' unlock in the Foliant Android app.</div>') +
     '<div class="nnv" id="iapMsg"></div>';
