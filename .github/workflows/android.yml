@@ -26,8 +26,8 @@ jobs:
       - name: Assemble web bundle
         run: node tools/copy-www.js
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # ubuntu-latest runners ship the Android SDK (ANDROID_HOME) with licenses
+      # accepted — no setup-android action needed for a Capacitor build.
 
       - name: Decode signing keystore (or generate a temporary one)
         env:
