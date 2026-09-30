@@ -23,7 +23,10 @@ No build step, no framework, no server. **Your PDF never leaves your device.**
 | **Highlights & notes** | Select text → 4 colors → attach notes; export everything as Markdown |
 | **Focus mode** | Dims everything except the paragraph you tap |
 | **Q&A review cards** | Auto-generates flashcards from headings/lists/summaries, or reads explicit `Q: … A: …` lines; flip-card review sessions with got-it / again ratings |
-| **Reading comfort** | 3 themes (paper / sepia / night), serif / sans fonts, font-size slider, progress bar, resume where you left off |
+| **Reading comfort** | 3 themes (paper / sepia / night), serif / sans fonts, font-size slider, progress bar |
+| **Bookshelf** | Every imported PDF is stored on-device (IndexedDB); reopen any past book from the home screen — no re-uploading |
+| **Exact resume** | Reopens at the exact viewport spot, not just the chapter |
+| **Live progress** | Per-chapter "% read · minutes left" that adapts to your measured reading speed |
 
 ## Project structure
 
@@ -38,6 +41,7 @@ foliant/
 │   ├── reader.css        Top bar, progress, book column, focus mode, nav
 │   ├── content.css       Rendered blocks: TOC, lists, callouts, code, figures
 │   ├── cards.css         In-page Q&A cards + review overlay
+│   ├── library.css       Home-screen bookshelf cards
 │   ├── highlights.css    Selection toolbar, marks, notes
 │   ├── search.css        Search sheet + jump pulse
 │   └── sheets.css        Bottom sheets + veil
@@ -48,6 +52,7 @@ foliant/
 │   ├── structure.js      Lines → blocks → chapters (the "brain")
 │   ├── render.js         Chapter → HTML
 │   ├── cards.js          Flashcard detection & generation
+│   ├── library.js        IndexedDB bookshelf: store, list, reopen, remove books
 │   ├── search.js         Whole-book search + jump-to-result
 │   ├── highlights.js     Selection, marks, notes, Markdown export
 │   ├── review.js         Flip-card review sessions
@@ -94,9 +99,14 @@ page. (Scanned PDFs need OCR first — Foliant reads text, not pictures of text.
 | Key | Contents |
 |---|---|
 | `foliant-s` | Global settings (theme, font, size, card toggles) |
-| `foliant-pos-<file>` | Last chapter read |
+| `foliant-pos-<file>` | Last chapter read (legacy bookmark) |
+| `foliant-spot-<file>` | Exact spot: `{chapter, y-offset, fraction}` |
+| `foliant-wpm` | Your measured reading speed (drives "minutes left") |
 | `foliant-h-<file>` | Highlights + notes |
 | `foliant-r-<file>` | Flashcard ratings |
+
+PDF bytes + shelf metadata live in **IndexedDB** (database `foliant`, stores
+`meta` and `data`) — that's what makes the shelf work offline and instantly.
 
 Clearing site data resets everything.
 

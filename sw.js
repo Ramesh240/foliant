@@ -4,15 +4,15 @@
    - Fetch:   cache-first for same-origin GETs; network fallback + runtime cache.
    - Navigations: network-first, fall back to the cached shell (offline support).
    Version bump (CACHE name) forces old caches out on the next load. */
-const CACHE = 'foliant-v2';
+const CACHE = 'foliant-v3';
 const SHELL = [
   './',
   'index.html',
   'manifest.webmanifest',
   'styles/base.css', 'styles/home.css', 'styles/reader.css', 'styles/content.css',
-  'styles/cards.css', 'styles/highlights.css', 'styles/sheets.css', 'styles/search.css',
+  'styles/cards.css', 'styles/highlights.css', 'styles/sheets.css', 'styles/search.css', 'styles/library.css',
   'js/config.js', 'js/utils.js', 'js/parse.js', 'js/structure.js', 'js/render.js',
-  'js/cards.js', 'js/ui.js', 'js/search.js', 'js/highlights.js', 'js/review.js', 'js/figures.js', 'js/main.js',
+  'js/cards.js', 'js/ui.js', 'js/search.js', 'js/library.js', 'js/highlights.js', 'js/review.js', 'js/figures.js', 'js/main.js',
   'vendor/pdfjs/pdf.min.js', 'vendor/pdfjs/pdf.worker.min.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png',
 ];

@@ -12,10 +12,12 @@ function render() {
   const words = ch.b.reduce((n, b) => n + b.t.split(/\s+/).length, 0);
   const nc = cardsOfCh(ch, cur).length;
 
-  /* Chapter header: title + "Chapter N of M — about X min read · N cards". */
+  /* Chapter header: title + "Chapter N of M — about X min read · N cards"
+     plus a live "NN% · M min left" line updated by progress() on scroll. */
   let h = `<h1 class="ch">${esc(nice(ch.title))}</h1><div class="meta">Chapter ${cur+1} of ${chapters.length} — ` +
     `${words ? `about ${Math.max(1, Math.round(words/220))} min read` : 'opens the next section'}` +
-    `${nc ? ` · ${nc} card${nc>1?'s':''} to review` : ''}</div>`;
+    `${nc ? ` · ${nc} card${nc>1?'s':''} to review` : ''}</div>` +
+    `<div class="live" id="live"></div>`;
   let inUl = false;
 
   for (let i = 0; i < ch.b.length; i++) {
@@ -92,10 +94,11 @@ function render() {
     `<button id="nx" class="p" ${cur < chapters.length-1 ? '' : 'disabled'}>Next chapter</button></div>`;
 
   book.innerHTML = h;
-  /* Callers that position the viewport themselves (search jumps) set
-     SKIP_RENDER_SCROLL; everyone else starts the chapter at the top. */
+  /* Callers that position the viewport themselves (search jumps, exact
+     resume) set SKIP_RENDER_SCROLL; everyone else starts at the top. */
   if (!SKIP_RENDER_SCROLL) window.scrollTo({ top: 0, behavior: 'instant' });
   progress();
+  savePos();
   try { localStorage.setItem('foliant-pos-' + name, cur); } catch (e) {}
   $('#pv').onclick = () => go(cur-1);
   loadFigs();

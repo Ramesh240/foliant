@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;600&display=swap">
 <link rel="stylesheet" href="styles/base.css">
 <link rel="stylesheet" href="styles/home.css">
+<link rel="stylesheet" href="styles/library.css">
 <link rel="stylesheet" href="styles/reader.css">
 <link rel="stylesheet" href="styles/content.css">
 <link rel="stylesheet" href="styles/cards.css">
@@ -21,11 +22,12 @@
 </head>
 <body>
 
-<!-- ===== Home: PDF picker ==================================== -->
+<!-- ===== Home: PDF picker + your shelf ======================= -->
 <section id="home">
   <h1>Read any PDF like a book.</h1>
   <p>Drop in a PDF. Get chapters, clean typography, highlights and a focus mode
      that keeps your eyes on one paragraph at a time. Your file stays on your device.</p>
+  <div id="shelf" aria-label="Your books"></div>
   <label id="drop" tabindex="0">
     <b>Choose a PDF</b><span>or drag it here</span>
     <input id="file" type="file" accept="application/pdf" class="hide">
@@ -107,6 +109,7 @@
 <script src="js/structure.js"></script>
 <script src="js/render.js"></script>
 <script src="js/cards.js"></script>
+<script src="js/library.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/search.js"></script>
 <script src="js/highlights.js"></script>
