@@ -96,3 +96,52 @@ Bump in two places, then push:
 
 - `package.json` → `"version"`
 - `android/app/build.gradle` → `versionCode` (+1 each release) and `versionName`
+
+## 6. Premium unlock ($1.99 one-time, Google Play Billing)
+
+Foliant has a **one-time non-consumable purchase** — `foliant_premium` at $1.99 —
+that unlocks three value-add features: **Review cards**, **whole-book search** and
+**Markdown export**. Reading, highlights, the bookshelf, themes and the bottom
+bar stay free. The entitlement is cached in `localStorage['foliant-iap']` so
+Premium works offline; the Android bridge is authoritative on startup.
+
+### 6.1 Create the product in Play Console
+
+1. Play Console → Foliant → **Monetize → Products → In-app products** → *Create product*.
+2. Product ID: **`foliant_premium`** (must match `IAP_PRODUCT` in
+   [js/iap.js](../js/iap.js) exactly). Type: **Non-consumable** (managed).
+3. Name: "Foliant Premium"; price: **$1.99** (your choice per market).
+4. **Activate** the product. Play Billing is unavailable to testers until it is active.
+
+### 6.2 Bridge (Capacitor shell)
+
+The web app calls a tiny bridge object the Android shell must inject:
+
+```js
+window.FoliantBilling = {
+  purchase() -> Promise<{ok:true} | {ok:false}>,   // launches Play billing flow
+  restore()  -> Promise<{ok:true} | {ok:false}>    // queries owned purchases
+};
+```
+
+Implement it in `android/app/src/main/java/.../MainActivity.java` with the
+[Play Billing Library](https://developer.android.com/google/play/billing)
+(v7+, `com.android.billingclient:billing-ktx`), calling
+`iapSetPremium(true, 'play')` (exposed globally by [js/iap.js](../js/iap.js))
+whenever ownership is confirmed — at startup via `queryPurchasesAsync` and after
+`purchase()` resolves. Until the bridge exists, the app degrades gracefully:
+web users see a "Get Premium in the Android app" sheet, and the dev helper
+`FoliantDev.unlock()` / `FoliantDev.lock()` (localhost only) simulates the
+purchase for UI testing.
+
+### 6.3 Testing checklist
+
+1. Play Console → **Testing → Internal testing** → add your Gmail as tester.
+2. Upload an AAB to the internal track; install via the opt-in link.
+3. Buy the product with a **test card** (never your real card while the
+   license-testing account is set).
+4. Kill + reopen the app → Premium still on (cached) and re-verified.
+5. Web app: search/review/export show the unlock sheet; after an Android
+   purchase, `Restore purchase` on the web pitch sheet returns `ok` only once
+   the account backend exists — until then web Premium comes from the cache
+   written by the Android bridge.

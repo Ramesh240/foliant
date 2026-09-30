@@ -95,6 +95,8 @@
   <div class="row"><button id="bNav">Customize bottom bar</button></div>
   <div class="row"><button id="bQa">Q&amp;A cards: on</button></div>
   <div class="row"><button id="bRev">Review cards</button></div>
+  <div class="row"><button id="bPrem">Foliant Premium — $1.99</button></div>
+  <div class="row"><button id="bPrem">Foliant Premium — $1.99</button></div>
   <div style="font-size:13px;color:var(--mute)">Tap a paragraph to focus it. Select text to highlight it, then tap a highlight to add a note or remove it.</div>
 </div>
 
@@ -124,6 +126,13 @@
 <script src="js/figures.js"></script>
 <script src="js/main.js"></script>
 <script src="js/iap.js"></script>
+<script>if (window.IAP_PREMIUM_PREVIEW) {
+  /* Local-UI preview hook (always ships false; see js/nav.js): flips the
+     entitlement on after iap.js has loaded so the Premium layout can be
+     inspected without a store. */
+  document.addEventListener('DOMContentLoaded', () => iapSetPremium(true, 'preview'));
+}
+</script>
 
 <!-- PWA: register the offline service worker (http/https only — skipped on file://). -->
 <script>

@@ -4,7 +4,7 @@
    - Fetch:   cache-first for same-origin GETs; network fallback + runtime cache.
    - Navigations: network-first, fall back to the cached shell (offline support).
    Version bump (CACHE name) forces old caches out on the next load. */
-const CACHE = 'foliant-v4';
+const CACHE = 'foliant-v5';
 const SHELL = [
   './',
   'index.html',

@@ -14,7 +14,10 @@ function saveR() { try { localStorage.setItem('foliant-r-' + name, JSON.stringif
 
 const rvBox = () => $('#rvw .rc');
 
-function openReview() { closeSheets(); $('#rvw').classList.remove('hide'); rvMenu(); }
+function openReview() {
+  if (!gateFeature('review')) return;   // Premium gate (js/iap.js)
+  closeSheets(); $('#rvw').classList.remove('hide'); rvMenu();
+}
 
 /* Menu: counts per bucket + toggles. */
 function rvMenu() {

@@ -126,6 +126,7 @@ function renderSearchResults() {
 }
 
 function openSearch() {
+  if (!gateFeature('search')) return;   // Premium gate (js/iap.js)
   openSheet('#sSearch');
   setTimeout(() => { try { $('#sq').focus(); } catch (e) {} }, 60);
 }

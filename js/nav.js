@@ -26,8 +26,9 @@
 'use strict';
 
 /* Set true to preview the Premium layout (adds the Customize quick button)
-   without a store. Always ship false. */
-const IAP_PREMIUM_PREVIEW = false;
+   without a store. Always ship false. (var, not const: the inline hook in
+   index.html reads it off window.) */
+var IAP_PREMIUM_PREVIEW = false;
 
 const NAV_DEFS = {
   toc:    { i: '☰',  l: 'Chapters' },

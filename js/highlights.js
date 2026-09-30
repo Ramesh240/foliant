@@ -164,6 +164,7 @@ $('#bHl').onclick = () => openSheet('#sHl');
 /* Highlight list: click "copy" exports Markdown; click a row jumps to the mark. */
 $('#sHl').onclick = e => {
   if (e.target.closest('#hCopy')) {
+    if (!gateFeature('export')) return;   // Premium gate (js/iap.js)
     const md = hlMd(), bt = $('#hCopy');
     (navigator.clipboard ? navigator.clipboard.writeText(md) : Promise.reject())
       .then(() => { bt.textContent = 'Copied'; })

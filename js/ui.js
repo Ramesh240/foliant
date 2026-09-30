@@ -192,3 +192,4 @@ function toggleFocus(btn) {
 $('#bFocus').onclick = e => toggleFocus(e.target);
 $('#bQa').onclick = () => { S.qa = !S.qa; applyS(); const y = scrollY; render(); scrollTo(0, y); };
 $('#bNav').onclick = () => openNavSheet();
+$('#bPrem').onclick = () => iapUnlockSheet();   // no arg -> full Premium pitch

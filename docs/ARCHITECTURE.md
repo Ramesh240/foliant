@@ -151,6 +151,20 @@ labels are encoded in the slot id (`'-Home|home'` = home action, label "Home").
 A Premium-only quick `custom` slot is render-filtered on `IAP.premium` (see
 [iap.js](../js/iap.js)) so a lapsed subscription hides it without deleting it.
 
+### Premium entitlement ([js/iap.js](../js/iap.js))
+A single non-consumable purchase (`foliant_premium`, $1.99) unlocks review,
+search and export. UI entry points call `gateFeature(id)` — `openSearch`,
+`openReview` and the Markdown copy button — which returns true when
+`IAP.premium` holds and otherwise slides up the unlock sheet (`#sIap`). The
+entitlement is cached in `localStorage['foliant-iap']` so it survives offline
+starts; under the Android shell a `window.FoliantBilling` bridge (Play Billing
+Library, see docs/PUBLISHING.md §6) is authoritative and re-verified at
+startup. On the web there is deliberately no purchase path — the sheet points
+to the Android app — and a localhost-only `FoliantDev.unlock()/lock()` helper
+exists for UI testing. Because the gates live at the entry points rather than
+inside the engines, `runSearch()`/`allCards()`/`hlMd()` stay honest functions
+that extensions and tests can call directly.
+
 ## Extension points
 
 - **New block type:** classify it in `structure.js` (step 3), style it in

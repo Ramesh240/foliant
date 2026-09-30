@@ -28,6 +28,7 @@ No build step, no framework, no server. **Your PDF never leaves your device.**
 | **Bookshelf** | Every imported PDF is stored on-device (IndexedDB); reopen any past book from the home screen — no re-uploading |
 | **Exact resume** | Reopens at the exact viewport spot, not just the chapter |
 | **Live progress** | Per-chapter "% read · minutes left" that adapts to your measured reading speed |
+| **Foliant Premium** | One-time $1.99 unlock (Google Play Billing on Android) for Review cards, whole-book search and Markdown export; reading, highlights, shelf and themes stay free |
 
 ## Project structure
 
@@ -61,7 +62,8 @@ foliant/
 │   ├── figures.js        Canvas figure rendering
 │   ├── ui.js             Sheets, settings, book click handling
 │   ├── nav.js            Customizable bottom nav bar (loaded after ui.js)
-│   └── main.js           File open flow (loaded last)
+│   ├── iap.js            Premium entitlement + $1.99 unlock flow (loaded last)
+│   └── main.js           File open flow
 ├── vendor/pdfjs/         pdf.js 3.11 vendored locally — no network needed
 ├── icons/                PWA + Android launcher icons (generated)
 ├── android/              Capacitor 6 native Android project
@@ -107,6 +109,7 @@ page. (Scanned PDFs need OCR first — Foliant reads text, not pictures of text.
 | `foliant-wpm` | Your measured reading speed (drives "minutes left") |
 | `foliant-h-<file>` | Highlights + notes |
 | `foliant-r-<file>` | Flashcard ratings |
+| `foliant-iap` | Premium entitlement cache (`{premium, at, src}`) |
 
 PDF bytes + shelf metadata live in **IndexedDB** (database `foliant`, stores
 `meta` and `data`) — that's what makes the shelf work offline and instantly.
