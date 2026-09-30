@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Assemble web bundle
+        run: node tools/copy-www.js
+
       # Regenerates android/capacitor-cordova-android-plugins/ and copies the
       # web bundle into the project — both are gitignored build artifacts.
       - name: Sync Capacitor Android project
