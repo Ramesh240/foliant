@@ -29,11 +29,21 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Decode signing keystore
+      - name: Decode signing keystore (or generate a temporary one)
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
         run: |
-          echo "$KEYSTORE_B64" | base64 -d > android/app/foliant-release.keystore
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > android/app/foliant-release.keystore
+            echo "Using repository keystore secret."
+          else
+            echo "ANDROID_KEYSTORE_B64 not set — generating a TEMPORARY keystore."
+            echo "The AAB below is for device testing only; uploads signed with this"
+            echo "key cannot be updated later. See docs/PUBLISHING.md §2.1–2.2."
+            keytool -genkeypair -v -keystore android/app/foliant-release.keystore \
+              -alias foliant -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass foliant -keypass foliant -dname "CN=Foliant, OU=Dev, O=Personal, C=US"
+          fi
 
       - name: Build signed AAB + APK
         working-directory: android
@@ -42,7 +52,11 @@ jobs:
           CI_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           CI_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          ./gradlew bundleRelease assembleRelease
+          # Defaults match the temporary keystore; secrets override when present.
+          CI_KEYSTORE_PASSWORD="${CI_KEYSTORE_PASSWORD:-foliant}" \
+          CI_KEY_ALIAS="${CI_KEY_ALIAS:-foliant}" \
+          CI_KEY_PASSWORD="${CI_KEY_PASSWORD:-foliant}" \
+          ./gradlew bundleRelease assembleRelease --no-daemon
 
       - name: Upload AAB (Play Store)
         uses: actions/upload-artifact@v4
