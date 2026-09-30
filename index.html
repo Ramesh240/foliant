@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="styles/cards.css">
 <link rel="stylesheet" href="styles/highlights.css">
 <link rel="stylesheet" href="styles/sheets.css">
+<link rel="stylesheet" href="styles/search.css">
 </head>
 <body>
 
@@ -37,6 +38,7 @@
   <div id="top">
     <div id="bar">
       <button class="ib" id="bToc" aria-label="Chapters">☰</button>
+      <button class="ib" id="bSearch" aria-label="Search the book">🔍</button>
       <div class="t" id="title"></div>
       <button class="ib" id="bHl" aria-label="Highlights and notes">🖍</button>
       <button class="ib" id="bRvw" aria-label="Review cards">🗂</button>
@@ -64,6 +66,12 @@
 
 <!-- Bottom sheets -->
 <div id="sHl" class="sheet hide"></div>
+<div id="sSearch" class="sheet hide">
+  <h4>Search</h4>
+  <div class="sq"><input id="sq" type="search" placeholder="Search the whole book…" autocomplete="off"></div>
+  <div class="scount"></div>
+  <div id="sResults"></div>
+</div>
 <div id="sNote" class="sheet hide">
   <h4>Note</h4>
   <div class="hq" id="hq"></div>
@@ -100,6 +108,7 @@
 <script src="js/render.js"></script>
 <script src="js/cards.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/search.js"></script>
 <script src="js/highlights.js"></script>
 <script src="js/review.js"></script>
 <script src="js/figures.js"></script>

@@ -85,7 +85,7 @@ function openSheet(s) {
   $(s).classList.remove('hide');
   $('#veil').classList.remove('hide');
 }
-function closeSheets() { ['#sToc', '#sSet', '#sHl', '#sNote', '#veil'].forEach(s => $(s).classList.add('hide')); }
+function closeSheets() { ['#sToc', '#sSet', '#sHl', '#sNote', '#sSearch', '#veil'].forEach(s => $(s).classList.add('hide')); }
 
 $('#veil').onclick = closeSheets;
 $('#lb').onclick = () => $('#lb').classList.add('hide');

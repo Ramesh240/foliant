@@ -122,6 +122,20 @@ Each figure's page is rasterized once to a canvas (scale chosen so the box is ~1
 wide, cached in `PC`), cropped to the box with a 2 px bleed, and exported as a JPEG
 data URL. A generation token (`figTok`) aborts stale loads when you flip chapters.
 
+### Search ([js/search.js](../js/search.js))
+Whole-book search runs over the read model, not the DOM: every text-bearing block of
+every chapter is scanned with `needle = fold(q)`, where `fold()` lowercases and strips
+diacritics (NFD + combining-mark removal), so "resume" finds "résumé". Results are
+[{ci, bi, count, snippet}] in book order, capped at 200. Snippets take a ~110-char
+word-aligned window around the first hit; match positions are computed on the folded
+string and mirrored onto the original so accented characters survive, and every hit
+inside the window is wrapped in `<mark>`. Tapping a result jumps via `go()` (if the
+chapter differs) then `scrollIntoView` on the block's `data-bi` anchor after a double
+rAF (render must have painted), with a 1.4 s pulse animation. Every renderable block
+carries `data-bi`, while `selInfo()` in highlights.js deliberately only accepts
+`p[data-bi], li[data-bi]` — highlights and search anchor to the same indices but have
+different eligibility rules. Input is debounced 180 ms; Enter forces an immediate run.
+
 ## Extension points
 
 - **New block type:** classify it in `structure.js` (step 3), style it in

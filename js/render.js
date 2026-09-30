@@ -26,9 +26,8 @@ function render() {
 
     /* An explicit Q:/A: line is replaced by an interactive card. */
     if (S.qa) {
-      const r = qaAt(ch, i, cur);
-      if (r) {
-        h += `<div class="qa ${R[r.id] || ''}" data-id="${r.id}">` +
+      const r = qaAt(ch, i, cur);        if (r) {
+        h += `<div class="qa ${R[r.id] || ''}" data-id="${r.id}" data-bi="${i}">` +
           `<div class="q">${esc(r.q)}</div><div class="rv">Tap to reveal the answer</div>` +
           `<div class="a"><div>${r.a}</div></div>` +
           `<div class="rate"><button data-r="done">Got it</button><button data-r="again">Review again</button></div></div>`;
@@ -59,7 +58,7 @@ function render() {
         if (part && pv && pv.part) pv.sub.push(it.t);
         else RL.push({ ...it, part, sub: [] });
       });
-      h += '<ol class="tl">' + RL.map(it => {
+      h += '<ol class="tl" data-bi="' + i + '">' + RL.map(it => {
         const n = norm(it.t), n2 = norm(it.t.replace(/^\d+([.)]\d*)*\s*/, ''));
         const ci = it.part ? -1 : chapters.findIndex(c => {
           const m = norm(c.title);
@@ -74,18 +73,18 @@ function render() {
       }).join('') + '</ol>';
     }
     else if (b.k === 'code') {
-      h += `<pre><button>Copy</button><code>${esc(b.t)}</code></pre>`;
+      h += `<pre data-bi="${i}"><button>Copy</button><code>${esc(b.t)}</code></pre>`;
     }
     else if (b.k === 'p') {
       /* "Note: …" / "Tip: …" / "Warning: …" lines become callouts. */
       const m = b.t.match(/^(note|tip|important|warning|remember|key point|example)\s*[:\-–]\s*(.*)/i);
-      if (m) h += `<div class="co"><strong>${esc(m[1][0].toUpperCase() + m[1].slice(1).toLowerCase())}</strong>${esc(m[2])}</div>`;
+      if (m) h += `<div class="co" data-bi="${i}"><strong>${esc(m[1][0].toUpperCase() + m[1].slice(1).toLowerCase())}</strong>${esc(m[2])}</div>`;
       else {
         h += `<p data-bi="${i}" class="${b.dc ? 'first' : ''}${b.n ? ' step' : ''}">` +
           `${b.n ? `<span class="nb">${esc(b.n)}</span>` : ''}${hl(b.t, cur, i)}</p>`;
       }
     }
-    else h += `<${b.k === 'h1' ? 'h2' : b.k}>${esc(nice(b.t))}</${b.k === 'h1' ? 'h2' : b.k}>`;
+    else h += `<${b.k === 'h1' ? 'h2' : b.k} data-bi="${i}">${esc(nice(b.t))}</${b.k === 'h1' ? 'h2' : b.k}>`;
   }
   if (inUl) h += '</ul>';
 
@@ -93,7 +92,9 @@ function render() {
     `<button id="nx" class="p" ${cur < chapters.length-1 ? '' : 'disabled'}>Next chapter</button></div>`;
 
   book.innerHTML = h;
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  /* Callers that position the viewport themselves (search jumps) set
+     SKIP_RENDER_SCROLL; everyone else starts the chapter at the top. */
+  if (!SKIP_RENDER_SCROLL) window.scrollTo({ top: 0, behavior: 'instant' });
   progress();
   try { localStorage.setItem('foliant-pos-' + name, cur); } catch (e) {}
   $('#pv').onclick = () => go(cur-1);

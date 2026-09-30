@@ -1,0 +1,32 @@
+/* ============================================================
+   search.css — whole-book search sheet
+   ============================================================ */
+
+/* Search field row inside the sheet */
+#sSearch .sq{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+#sSearch #sq{flex:1;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:16px/1.4 Inter,sans-serif;background:var(--bg);color:var(--ink)}
+#sSearch #sq:focus{outline:2px solid var(--acc);outline-offset:1px}
+
+/* Result count / hint line */
+#sSearch .scount{font:400 13px Inter,sans-serif;color:var(--mute);margin:2px 0 10px;min-height:16px}
+
+/* Result rows: chapter label + snippet with <mark> around matches */
+#sSearch .sr{display:flex;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+#sSearch .sr:active{background:var(--acc2)}
+#sSearch .sc{flex:none;font:600 11px Inter,sans-serif;color:var(--acc);margin-top:3px;max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sSearch .st{flex:1;font:400 15px/1.45 Newsreader,Georgia,serif;overflow:hidden}
+#sSearch .st mark{background:var(--hi);color:inherit;border-radius:3px;padding:0 1px}
+:root[data-theme="night"] #sSearch .st mark{background:#4a4320}
+
+/* "jump to next chapter group" not needed; rows are grouped in DOM order */
+#sSearch .sgrp{font:600 12px Inter,sans-serif;color:var(--mute);margin:14px 0 2px;text-transform:uppercase;letter-spacing:.04em}
+
+/* Jump feedback: the hit block pulses briefly so the eye lands on it.
+   scroll-margin keeps 'start'-aligned jumps clear of the sticky top bar. */
+#book [data-bi]{scroll-margin-top:64px}
+@keyframes hitPulse{0%{background:rgba(255,180,60,.45)}100%{background:transparent}}
+#book .hit{outline:2px solid var(--acc);outline-offset:4px;border-radius:8px;animation:hitPulse 1.4s ease-out}
+
+/* Applied while a search jump scrolls: kills html{scroll-behavior:smooth}
+   so the jump is exact even in engines that animate programmatic scrolls. */
+html.jumping{scroll-behavior:auto!important}

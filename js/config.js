@@ -33,3 +33,7 @@ try { Object.assign(S, JSON.parse(localStorage.getItem('foliant-s') || '{}')); }
 
 /* Flashcard ratings { cardId: 'done' | 'again' }, per book: 'foliant-r-<name>'. */
 let R = {};
+
+/* Set to true around a render() whose scroll position the caller controls
+   (e.g. search jumps) so render() skips its scroll-to-top reset. */
+let SKIP_RENDER_SCROLL = false;

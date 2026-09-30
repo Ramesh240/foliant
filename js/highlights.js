@@ -47,7 +47,9 @@ function selInfo() {
   const sel = getSelection();
   if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
   const r = sel.getRangeAt(0);
-  const blk = n => n && (n.nodeType === 3 ? n.parentElement : n).closest('#book [data-bi]');
+  /* Only paragraphs and list items are highlightable: they are the blocks
+     render.js draws through hl(), and refreshBlock() re-renders them safely. */
+  const blk = n => n && (n.nodeType === 3 ? n.parentElement : n).closest('#book p[data-bi], #book li[data-bi]');
   const a = blk(r.startContainer), z = blk(r.endContainer);
   if (!a) return null;
   const nb = (a.querySelector('.nb') || { textContent: '' }).textContent.length,

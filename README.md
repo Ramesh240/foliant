@@ -19,6 +19,7 @@ No build step, no framework, no server. **Your PDF never leaves your device.**
 | **Figures** | Finds image regions per page, renders them as crops, supports captions and a lightbox |
 | **Code blocks** | Rows set in monospace fonts become copyable code blocks |
 | **Embedded TOC** | Detects a book's own table of contents and makes its entries clickable |
+| **Whole-book search** | Case- and diacritic-insensitive search across every chapter; tap a result to jump to the block with a pulse |
 | **Highlights & notes** | Select text → 4 colors → attach notes; export everything as Markdown |
 | **Focus mode** | Dims everything except the paragraph you tap |
 | **Q&A review cards** | Auto-generates flashcards from headings/lists/summaries, or reads explicit `Q: … A: …` lines; flip-card review sessions with got-it / again ratings |
@@ -30,7 +31,7 @@ No build step, no framework, no server. **Your PDF never leaves your device.**
 foliant/
 ├── index.html            Shell page: markup only, loads styles + scripts in order
 ├── manifest.webmanifest  PWA manifest (installable, offline)
-├── sw.js                 Service worker: offline-first app-shell cache
+├── sw.js                 Service worker: offline-first app-shell cache (v2)
 ├── styles/               CSS split by UI concern
 │   ├── base.css          Theme tokens (paper/sepia/night), resets
 │   ├── home.css          Landing screen + drop zone
@@ -38,6 +39,7 @@ foliant/
 │   ├── content.css       Rendered blocks: TOC, lists, callouts, code, figures
 │   ├── cards.css         In-page Q&A cards + review overlay
 │   ├── highlights.css    Selection toolbar, marks, notes
+│   ├── search.css        Search sheet + jump pulse
 │   └── sheets.css        Bottom sheets + veil
 ├── js/                   ES modules-in-spirit: plain scripts sharing globals
 │   ├── config.js         pdf.js worker setup, shared state (loaded first)
@@ -46,6 +48,7 @@ foliant/
 │   ├── structure.js      Lines → blocks → chapters (the "brain")
 │   ├── render.js         Chapter → HTML
 │   ├── cards.js          Flashcard detection & generation
+│   ├── search.js         Whole-book search + jump-to-result
 │   ├── highlights.js     Selection, marks, notes, Markdown export
 │   ├── review.js         Flip-card review sessions
 │   ├── figures.js        Canvas figure rendering
