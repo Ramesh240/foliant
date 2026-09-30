@@ -1,0 +1,53 @@
+/* ============================================================
+   nav.css — customizable bottom navigation bar (thumb reach)
+   Buttons render from S.nav (js/nav.js); labels sit under icons,
+   fixed 56px height, safe-area padded, hidden in home/pick mode.
+   ============================================================ */
+
+#navb{
+  position:fixed;left:0;right:0;bottom:0;z-index:6;
+  display:flex;justify-content:space-around;align-items:stretch;
+  background:color-mix(in srgb,var(--card) 94%,transparent);
+  backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  box-shadow:0 -6px 24px #0002;
+}
+#navb button{
+  flex:1;max-width:96px;min-width:0;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:7px 2px 6px;color:var(--mute);
+}
+#navb button .ni{font-size:19px;line-height:1.1}
+#navb button .nl{font:600 10px Inter,sans-serif;letter-spacing:.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#navb button.on{color:var(--acc)}
+#navb button:active{background:var(--acc2)}
+#navb.compact button .nl{display:none}
+#navb.compact button{padding:9px 2px 8px}
+#navb button.pri{color:var(--acc)}
+#navb.prem button[data-a="premium"]{color:var(--acc)}
+
+/* The reader column keeps its own bottom clearance so the last lines
+   of a chapter are never hidden behind the bar. */
+body.hasnav #book{padding-bottom:170px}
+
+/* Sheets slide up above the bar. */
+.sheet{bottom:56px}
+
+/* Floating selection toolbar clears the bar too. */
+#hbar{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+
+/* ---------- Customize sheet ---------- */
+.npz{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin:4px 0 14px}
+.npz label{display:flex;align-items:center;gap:8px;cursor:pointer;
+  font:400 15px Inter,sans-serif;padding:4px 0}
+.npz input{accent-color:var(--acc);width:17px;height:17px}
+.npz .ni{font-size:16px}
+
+.npv{display:flex;gap:10px;margin-bottom:14px}
+.npv button{flex:1;padding:11px;border-radius:12px;border:1px solid var(--line);font-weight:600}
+.npv button[aria-pressed="true"]{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+
+.nnv{font:600 12px Inter,sans-serif;color:var(--mute)}
+.nnh{font:600 12px Inter,sans-serif;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin:2px 0 8px}

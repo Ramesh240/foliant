@@ -48,6 +48,7 @@ async function openFromBuffer(key, buf, resume) {
     if (want) SKIP_RENDER_SCROLL = true;
     render();
     SKIP_RENDER_SCROLL = false;
+    if (typeof navOnOpen === 'function') navOnOpen();   // bottom bar (js/nav.js)
 
     /* Re-scroll after async figure work; figures only grow the page. */
     if (want) restoreScroll(want);

@@ -92,7 +92,7 @@ function openSheet(s) {
   $(s).classList.remove('hide');
   $('#veil').classList.remove('hide');
 }
-function closeSheets() { ['#sToc', '#sSet', '#sHl', '#sNote', '#sSearch', '#veil'].forEach(s => $(s).classList.add('hide')); }
+function closeSheets() { ['#sToc', '#sSet', '#sHl', '#sNote', '#sSearch', '#sNav', '#sIap', '#veil'].forEach(s => $(s).classList.add('hide')); }
 
 $('#veil').onclick = closeSheets;
 $('#lb').onclick = () => $('#lb').classList.add('hide');
@@ -180,9 +180,15 @@ $('#bNew').onclick = showHome;
 $('#fs').oninput = e => { S.fs = +e.target.value; applyS(); };
 $('#thm').onclick = e => { const b = e.target.closest('button'); if (b) { S.t = b.dataset.t; applyS(); } };
 $('#fnt').onclick = e => { const b = e.target.closest('button'); if (b) { S.f = b.dataset.f; applyS(); } };
-$('#bFocus').onclick = e => {
+/* Show/hide focus mode. Kept as a standalone function (not an inline
+   onclick) so the nav bar's Focus slot can reuse it; js/nav.js wraps it
+   to re-sync its own highlight. */
+function toggleFocus(btn) {
   focus = !focus;
   $('#book').classList.toggle('focus', focus);
-  e.target.textContent = 'Focus mode: ' + (focus ? 'on' : 'off');
-};
+  const b = btn || $('#bFocus');
+  if (b) b.textContent = 'Focus mode: ' + (focus ? 'on' : 'off');
+}
+$('#bFocus').onclick = e => toggleFocus(e.target);
 $('#bQa').onclick = () => { S.qa = !S.qa; applyS(); const y = scrollY; render(); scrollTo(0, y); };
+$('#bNav').onclick = () => openNavSheet();

@@ -37,3 +37,7 @@ let R = {};
 /* Set to true around a render() whose scroll position the caller controls
    (e.g. search jumps) so render() skips its scroll-to-top reset. */
 let SKIP_RENDER_SCROLL = false;
+
+/* Subscription/IAP entitlement state (populated by js/iap.js; declared here
+   so UI modules can consult it before the store answers). */
+let IAP = { ready: false, premium: false, owned: {}, products: {} };

@@ -22,6 +22,7 @@ No build step, no framework, no server. **Your PDF never leaves your device.**
 | **Whole-book search** | Case- and diacritic-insensitive search across every chapter; tap a result to jump to the block with a pulse |
 | **Highlights & notes** | Select text → 4 colors → attach notes; export everything as Markdown |
 | **Focus mode** | Dims everything except the paragraph you tap |
+| **Bottom nav bar** | Customizable thumb-reach bar on mobile: pick up to 5 slots (chapters, search, highlights, review, settings, library, focus, prev/next), icons-only mode, saved per device |
 | **Q&A review cards** | Auto-generates flashcards from headings/lists/summaries, or reads explicit `Q: … A: …` lines; flip-card review sessions with got-it / again ratings |
 | **Reading comfort** | 3 themes (paper / sepia / night), serif / sans fonts, font-size slider, progress bar |
 | **Bookshelf** | Every imported PDF is stored on-device (IndexedDB); reopen any past book from the home screen — no re-uploading |
@@ -34,7 +35,7 @@ No build step, no framework, no server. **Your PDF never leaves your device.**
 foliant/
 ├── index.html            Shell page: markup only, loads styles + scripts in order
 ├── manifest.webmanifest  PWA manifest (installable, offline)
-├── sw.js                 Service worker: offline-first app-shell cache (v2)
+├── sw.js                 Service worker: offline-first app-shell cache (v4)
 ├── styles/               CSS split by UI concern
 │   ├── base.css          Theme tokens (paper/sepia/night), resets
 │   ├── home.css          Landing screen + drop zone
@@ -44,6 +45,7 @@ foliant/
 │   ├── library.css       Home-screen bookshelf cards
 │   ├── highlights.css    Selection toolbar, marks, notes
 │   ├── search.css        Search sheet + jump pulse
+│   ├── nav.css           Bottom navigation bar + its customize editor
 │   └── sheets.css        Bottom sheets + veil
 ├── js/                   ES modules-in-spirit: plain scripts sharing globals
 │   ├── config.js         pdf.js worker setup, shared state (loaded first)
@@ -58,6 +60,7 @@ foliant/
 │   ├── review.js         Flip-card review sessions
 │   ├── figures.js        Canvas figure rendering
 │   ├── ui.js             Sheets, settings, book click handling
+│   ├── nav.js            Customizable bottom nav bar (loaded after ui.js)
 │   └── main.js           File open flow (loaded last)
 ├── vendor/pdfjs/         pdf.js 3.11 vendored locally — no network needed
 ├── icons/                PWA + Android launcher icons (generated)
@@ -98,7 +101,7 @@ page. (Scanned PDFs need OCR first — Foliant reads text, not pictures of text.
 
 | Key | Contents |
 |---|---|
-| `foliant-s` | Global settings (theme, font, size, card toggles) |
+| `foliant-s` | Global settings (theme, font, size, card toggles, bottom-bar layout) |
 | `foliant-pos-<file>` | Last chapter read (legacy bookmark) |
 | `foliant-spot-<file>` | Exact spot: `{chapter, y-offset, fraction}` |
 | `foliant-wpm` | Your measured reading speed (drives "minutes left") |

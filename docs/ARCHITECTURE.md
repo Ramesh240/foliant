@@ -29,8 +29,9 @@ render.js ───────► HTML in <article id="book">
 2. **Everything is client-side.** pdf.js parses the ArrayBuffer in-browser; the worker
    is loaded via a blob bridge (`importScripts` on a CDN URL) so the app even works
    from `file://`.
-3. **State is deliberately small:** `chapters`, `cur`, `name`, `S` (settings), `R`
-   (ratings), `HLS` (highlights) — see [js/config.js](../js/config.js).
+3. **State is deliberately small:** `chapters`, `cur`, `name`, `S` (settings,
+   including the bottom-bar slot list), `R` (ratings), `HLS` (highlights) —
+   see [js/config.js](../js/config.js).
 
 ## Stage 1 — Parsing ([js/parse.js](../js/parse.js))
 
@@ -135,6 +136,20 @@ rAF (render must have painted), with a 1.4 s pulse animation. Every renderable b
 carries `data-bi`, while `selInfo()` in highlights.js deliberately only accepts
 `p[data-bi], li[data-bi]` — highlights and search anchor to the same indices but have
 different eligibility rules. Input is debounced 180 ms; Enter forces an immediate run.
+
+### Bottom navigation ([js/nav.js](../js/nav.js))
+A fixed thumb-reach bar (`#navb`, hidden while the home screen shows) whose
+buttons come from a slot list persisted in `S.nav` with the other settings.
+Slots map one-to-one onto existing actions — `openSheet('#sToc'/'#sHl'/'#sSet')`,
+`openSearch()`, `openReview()`, `showHome()`, `toggleFocus()`, `go(cur±1)` — so the
+bar adds no second implementation of anything. The customize editor is an ordinary
+bottom sheet (`#sNav`, also reachable from Settings) that toggles slots and an
+icons-only mode; changing anything calls `applyS()`, which re-renders the bar.
+`prev`/`next` disable at the book's edges via `navSync()`, and the reader column
+pads its bottom (`body.hasnav #book`) so the bar never covers text. Custom user
+labels are encoded in the slot id (`'-Home|home'` = home action, label "Home").
+A Premium-only quick `custom` slot is render-filtered on `IAP.premium` (see
+[iap.js](../js/iap.js)) so a lapsed subscription hides it without deleting it.
 
 ## Extension points
 
