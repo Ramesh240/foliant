@@ -23,8 +23,13 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Assemble web bundle
-        run: node tools/copy-www.js
+      - name: Install dependencies
+        run: npm ci
+
+      # Regenerates android/capacitor-cordova-android-plugins/ and copies the
+      # web bundle into the project — both are gitignored build artifacts.
+      - name: Sync Capacitor Android project
+        run: npx cap sync android
 
       # ubuntu-latest runners ship the Android SDK (ANDROID_HOME) with licenses
       # accepted — no setup-android action needed for a Capacitor build.
