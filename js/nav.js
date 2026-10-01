@@ -219,3 +219,57 @@ function navOnPremium() {
   if (!S.nav.some(id => navBase(id) === 'custom')) S.nav.push('-custom');
   applyS();
 }
+
+/* ---------- Chapter scrubber (progress hairline as a seek bar) ----------
+   The progress line is draggable: move left/right to move through the book
+   live — chapter changes render as the finger crosses their boundaries, the
+   rest of the travel is in-chapter scroll. Touch gets an enlarged hit zone
+   and touch-action:none in bottom-only mode (nav.css); mouse works anywhere
+   the line is visible. */
+const scrubTip = document.createElement('div');
+scrubTip.id = 'scrubTip';
+scrubTip.className = 'hide';
+document.body.appendChild(scrubTip);
+
+function scrubSeek(clientX) {
+  if (!chapters.length) return;
+  const prog = $('#prog'), r = prog.getBoundingClientRect();
+  const f = Math.min(1, Math.max(0, (clientX - r.left) / Math.max(1, r.width)));
+  const idx = Math.min(chapters.length - 1, Math.floor(f * chapters.length));
+  const cf = Math.min(1, Math.max(0, f * chapters.length - idx));
+  if (idx !== cur) { SKIP_RENDER_SCROLL = true; go(idx); SKIP_RENDER_SCROLL = false; }
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const m = document.documentElement.scrollHeight - innerHeight;
+    root.classList.add('jumping');
+    window.scrollTo(0, cf * Math.max(0, m));
+    root.classList.remove('jumping');
+  }));
+  /* Preview bubble above the drag point: chapter title + position. */
+  scrubTip.classList.remove('hide');
+  scrubTip.innerHTML = '<b>' + esc(nice(chapters[idx].title)) + '</b><span>' +
+    (idx + 1) + ' / ' + chapters.length + '</span>';
+  const above = r.top > innerHeight / 2;
+  scrubTip.style.top = above ? 'auto' : (r.bottom + 14) + 'px';
+  scrubTip.style.bottom = above ? (innerHeight - r.top + 14) + 'px' : 'auto';
+  scrubTip.style.left = Math.min(innerWidth - 130, Math.max(130, clientX)) + 'px';
+}
+
+let scrubbing = false;
+$('#prog').addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button) return;
+  if (chapters.length < 2 || document.querySelector('#reader').classList.contains('hide')) return;
+  scrubbing = true;
+  $('#prog').classList.add('scrubbing');
+  try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+  scrubSeek(e.clientX);
+  e.preventDefault();
+});
+$('#prog').addEventListener('pointermove', e => { if (scrubbing) scrubSeek(e.clientX); });
+const scrubEnd = () => {
+  if (!scrubbing) return;
+  scrubbing = false;
+  $('#prog').classList.remove('scrubbing');
+  scrubTip.classList.add('hide');
+};
+$('#prog').addEventListener('pointerup', scrubEnd);
+$('#prog').addEventListener('pointercancel', scrubEnd);

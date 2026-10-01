@@ -157,6 +157,15 @@ the nav bar's top edge (`--navh` pins the bar height so sheets, the selection
 toolbar and the hairline all anchor exactly); the top bar must drop its
 `backdrop-filter` there, because a filter makes it a containing block that
 would anchor the fixed line to `#top` instead of the viewport.
+
+Two gestures ride on the chrome: the hairline doubles as a chapter scrubber
+([nav.js](../js/nav.js) `scrubSeek` — chapter changes render live as the drag
+crosses their boundaries, the rest of the travel is in-chapter scroll, and a
+preview bubble shows the target title), and horizontal swipes on `#book` flip
+chapters ([ui.js](../js/ui.js)). The swipe uses pointer events with an axis
+lock and `touch-action:pan-y pinch-zoom`, so vertical scrolling and pinch
+zoom stay native; code blocks keep their own horizontal scroll, and a live
+text selection aborts the gesture so highlighting is never interrupted.
 `prev`/`next` disable at the book's edges via `navSync()`, and the reader column
 pads its bottom (`body.hasnav #book`) so the bar never covers text. Custom user
 labels are encoded in the slot id (`'-Home|home'` = home action, label "Home").

@@ -103,6 +103,21 @@ body.hasnav #book{padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 .toc button:last-child{border-bottom:0}
 .toc button.cur{color:var(--acc);font-weight:700}
 
+/* ---------- Progress hairline as a chapter scrubber ----------
+   Bottom-only mode: the hairline gets a tall invisible hit zone above it
+   (taps near the bar edge must not steal nav-button presses), ignores
+   vertical scroll while dragging, and fattens to 6px while active. */
+html[data-chrome="bottom"] #prog{touch-action:none;cursor:ew-resize}
+html[data-chrome="bottom"] #prog::after{content:"";position:absolute;left:0;right:0;top:-14px;height:17px}
+#prog{user-select:none;-webkit-user-select:none}
+#prog.scrubbing{height:6px;box-shadow:0 -2px 10px #0002}
+
+/* Preview bubble while scrubbing: chapter title + N / M */
+#scrubTip{position:fixed;z-index:8;transform:translateX(-50%);background:var(--ink);color:var(--bg);
+  padding:7px 12px;border-radius:12px;box-shadow:0 8px 24px #0005;pointer-events:none;max-width:min(240px,80vw)}
+#scrubTip b{display:block;font:600 12.5px Inter,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#scrubTip span{font:600 10.5px Inter,sans-serif;opacity:.7}
+
 /* ---------- Customize sheet ---------- */
 .npz{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin:4px 0 14px}
 .npz label{display:flex;align-items:center;gap:8px;cursor:pointer;

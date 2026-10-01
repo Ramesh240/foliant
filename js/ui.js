@@ -200,3 +200,51 @@ $('#bch').onclick = e => {
 $('#bQa').onclick = () => { S.qa = !S.qa; applyS(); const y = scrollY; render(); scrollTo(0, y); };
 $('#bNav').onclick = () => openNavSheet();
 $('#bPrem').onclick = () => iapUnlockSheet();   // no arg -> full Premium pitch
+
+/* ---------- Touch gesture: swipe left / right to flip chapters ----------
+   Horizontal intent locks the axis (vertical scrolling, pinch zoom and text
+   selection are untouched — a live selection aborts the gesture). Code
+   blocks keep their native horizontal scroll. A committed swipe (56px+)
+   renders the neighbouring chapter with a short slide-in. */
+(function () {
+  if (!('PointerEvent' in window)) return;
+  const book = $('#book');
+  let x0 = 0, y0 = 0, axis = '', live = false;
+  const abort = () => { live = false; book.style.transform = ''; };
+  book.addEventListener('pointerdown', e => {
+    live = false; axis = '';
+    if (e.pointerType === 'mouse' || !e.isPrimary || e.button) return;
+    if (chapters.length < 2 || String(getSelection()).length) return;
+    if (e.target.closest('pre')) return;   // code blocks scroll horizontally
+    x0 = e.clientX; y0 = e.clientY; live = true;
+  });
+  book.addEventListener('pointermove', e => {
+    if (!live) return;
+    if (String(getSelection()).length) { abort(); return; }   // selection started
+    const dx = e.clientX - x0, dy = e.clientY - y0;
+    if (!axis) {
+      if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
+      axis = Math.abs(dx) > Math.abs(dy) * 1.4 ? 'x' : 'y';
+    }
+    if (axis === 'x') {
+      e.preventDefault();
+      book.style.transform = 'translateX(' + Math.max(-32, Math.min(32, dx * 0.18)) + 'px)';
+    }
+  });
+  book.addEventListener('pointerup', e => {
+    if (!live) return;
+    live = false;
+    const dx = e.clientX - x0;
+    book.style.transform = '';
+    if (axis !== 'x' || Math.abs(dx) < 56) return;
+    const dir = dx < 0 ? 1 : -1;   // left = next chapter, right = previous
+    if (dir > 0 ? cur < chapters.length - 1 : cur > 0) {
+      book.classList.remove('flip-l', 'flip-r');
+      void book.offsetWidth;       // restart the slide-in animation
+      book.classList.add(dir > 0 ? 'flip-l' : 'flip-r');
+      go(cur + dir);
+    }
+  });
+  book.addEventListener('pointercancel', abort);
+  book.addEventListener('animationend', () => book.classList.remove('flip-l', 'flip-r'));
+})();

@@ -18,11 +18,19 @@
 #prog{height:3px;background:var(--line)}
 #prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .15s}
 
-/* The book column */
+/* The book column. touch-action keeps vertical scroll + pinch zoom native
+   and hands horizontal drags to ui.js's swipe-to-flip-chapters gesture. */
 #book{
   max-width:680px;margin:0 auto;padding:34px 22px 120px;
   font-family:Newsreader,Georgia,serif;font-size:var(--fs,20px);line-height:1.7;
+  touch-action:pan-y pinch-zoom;
 }
+
+/* Slide-in when a chapter is flipped in by swipe */
+#book.flip-l{animation:flipL .22s ease}
+#book.flip-r{animation:flipR .22s ease}
+@keyframes flipL{from{opacity:0;transform:translateX(26px)}}
+@keyframes flipR{from{opacity:0;transform:translateX(-26px)}}
 :root[data-font="sans"] #book{font-family:Inter,system-ui,sans-serif;line-height:1.65}
 
 /* Chapter title + meta line injected by render.js */
