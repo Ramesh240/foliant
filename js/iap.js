@@ -61,6 +61,20 @@ if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
   };
 }
 
+/* ---------- Android Play Billing bridge ----------
+   The Capacitor shell registers FoliantBillingPlugin (Java side), which
+   Capacitor exposes under window.Capacitor.Plugins. Adapt it to the
+   FoliantBilling seam the rest of this file expects; call.reject(msg)
+   becomes a rejected promise, which the sheet handlers already surface. */
+(function () {
+  const cap = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FoliantBilling;
+  if (!cap) return;   // plain web: no bridge; iapAndroid() falls back to the UA check
+  window.FoliantBilling = {
+    purchase: () => cap.purchase(),
+    restore: () => cap.restore()
+  };
+})();
+
 /* ---------- Unlock / pitch sheet ---------- */
 
 function iapUnlockSheet(f) {
@@ -127,8 +141,14 @@ function gateFeature(f) {
    sync, and label the Settings row. */
 function iapConfigure() {
   IAP.ready = true;
-  /* Android shell: call FoliantBilling.restore() here when it exists and
-     call iapSetPremium from its result; web keeps the cached value. */
+  /* Android shell: re-verify the cached entitlement with Play at startup so
+     refunds or account switches are honored; web keeps the cached value. */
+  const native = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  if (native && !IAP.premium && window.FoliantBilling) {
+    window.FoliantBilling.restore()
+      .then(r => { if (r && r.ok) iapSetPremium(true, 'play'); })
+      .catch(() => {});   // offline / no store: stay with the cache
+  }
   if (IAP.premium && typeof navOnPremium === 'function') navOnPremium();
 }
 

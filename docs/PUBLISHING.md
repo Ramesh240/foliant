@@ -120,27 +120,32 @@ Premium works offline; the Android bridge is authoritative on startup.
 3. Name: "Foliant Premium"; price: **$1.99** (your choice per market).
 4. **Activate** the product. Play Billing is unavailable to testers until it is active.
 
-### 6.2 Bridge (Capacitor shell)
+### 6.2 Bridge (Capacitor shell) — implemented
 
-The web app calls a tiny bridge object the Android shell must inject:
+The bridge ships as `android/app/src/main/java/com/ramesh/foliant/FoliantBillingPlugin.java`
+(registered in `MainActivity`), backed by the
+[Play Billing Library](https://developer.android.com/google/play/billing)
+(`com.android.billingclient:billing-ktx` 7.x, wired in `android/app/build.gradle`).
+js/iap.js adapts the Capacitor plugin object to the seam the app expects:
 
 ```js
 window.FoliantBilling = {
-  purchase() -> Promise<{ok:true} | {ok:false}>,   // launches Play billing flow
-  restore()  -> Promise<{ok:true} | {ok:false}>    // queries owned purchases
+  purchase() -> Promise<{ok:true, productId} | {ok:false} | Error>,
+  restore()  -> Promise<{ok:true, productId} | {ok:false} | Error>
 };
 ```
 
-Implement it in `android/app/src/main/java/.../MainActivity.java` with the
-[Play Billing Library](https://developer.android.com/google/play/billing)
-(v7+, `com.android.billingclient:billing-ktx`), calling
-`iapSetPremium(true, 'play')` (exposed globally by [js/iap.js](../js/iap.js))
-whenever ownership is confirmed — at startup via `queryPurchasesAsync` and after
-`purchase()` resolves. Until the bridge exists, the app degrades gracefully:
-web users get the features free (no purchase path on that origin), Android
-users see the Play purchase sheet, and the dev helper
-`FoliantDev.unlock()` / `FoliantDev.lock()` (localhost only) simulates the
-purchase for UI testing.
+Behavior: `purchase()` launches the Play flow for `foliant_premium` and
+acknowledges the purchase (unacknowledged one-time buys are auto-refunded by
+Play after 3 days); `restore()` reports an existing entitlement and is also
+probed automatically at app startup so refunds and account switches take
+effect. `iapSetPremium(true, 'play')` (js/iap.js) grants the entitlement in
+the web layer whenever either path confirms ownership.
+
+On plain web there is still no purchase path: web users get the features free
+(no purchase path on that origin), Android users see the Play purchase sheet,
+and the dev helper `FoliantDev.unlock()` / `FoliantDev.lock()` (localhost only)
+simulates the purchase for UI testing.
 
 ### 6.3 Testing checklist
 

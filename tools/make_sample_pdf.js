@@ -1,5 +1,11 @@
-/* Generate a tiny multi-page sample.pdf for smoke-testing Foliant. */
+/* Generate a tiny multi-page sample.pdf for smoke-testing Foliant.
+   Usage: node tools/make_sample_pdf.js [pageRepeats] [outfile]
+   e.g. `node tools/make_sample_pdf.js 80 big.pdf` -> a ~320-page stress book
+   (the 4 page specs repeated 80 times) for first-open performance testing. */
 const fs = require('fs');
+
+const REPS = Math.max(1, parseInt(process.argv[2] || '1', 10) || 1);
+const OUT = process.argv[3] || 'sample.pdf';
 
 const esc = s => s.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
 
@@ -68,15 +74,18 @@ function pageStream(title, lines) {
   return s;
 }
 
-const n = pages.length;
-const streams = pages.map(([t, l]) => pageStream(t, l));
+const allPages = [];
+for (let r = 0; r < REPS; r++) allPages.push(...pages);
+
+const n = allPages.length;
+const streams = allPages.map(([t, l]) => pageStream(t, l));
 const fontId = 3 + 2 * n;
-const kids = pages.map((_, i) => `${3 + i * 2} 0 R`).join(' ');
+const kids = allPages.map((_, i) => `${3 + i * 2} 0 R`).join(' ');
 
 const objects = {};
 objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
 objects[2] = `<< /Type /Pages /Kids [${kids}] /Count ${n} >>`;
-pages.forEach((_, i) => {
+allPages.forEach((_, i) => {
   const pid = 3 + i * 2, cid = 4 + i * 2;
   objects[pid] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
     `/Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${cid} 0 R >>`;
@@ -98,5 +107,5 @@ for (let id = 1; id <= fontId; id++) x += String(offsets[id]).padStart(10, '0') 
 x += `trailer\n<< /Size ${fontId + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
 out.push(x);
 
-fs.writeFileSync('sample.pdf', out.join(''), 'binary');
-console.log('wrote sample.pdf', Buffer.byteLength(out.join('')), 'bytes');
+fs.writeFileSync(OUT, out.join(''), 'binary');
+console.log(`wrote ${OUT} (${n} pages)`, Buffer.byteLength(out.join('')), 'bytes');

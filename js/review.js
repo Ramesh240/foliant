@@ -9,8 +9,15 @@
 
 let deck = [], di = 0, shown = false, tally = { done: 0, again: 0 };
 
-function loadR() { try { R = JSON.parse(localStorage.getItem('foliant-r-' + name) || '{}'); } catch (e) { R = {}; } }
-function saveR() { try { localStorage.setItem('foliant-r-' + name, JSON.stringify(R)); } catch (e) {} }
+/* Card ratings live in IndexedDB ('user' store, key '<book>:r'); the legacy
+   localStorage copy is a fallback until the one-time migration runs. */
+async function loadR() {
+  R = {};
+  const v = await userGet(name + ':r');
+  if (v && typeof v === 'object') { R = v; return; }
+  try { R = JSON.parse(localStorage.getItem('foliant-r-' + name) || '{}'); } catch (e) { R = {}; }
+}
+function saveR() { userPut(name + ':r', R); }
 
 const rvBox = () => $('#rvw .rc');
 

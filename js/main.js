@@ -22,7 +22,7 @@ async function openFromBuffer(key, buf, resume) {
     chapters = build(L);
     modelSave(key, chapters);   // cache the parsed book for instant reopen
     cur = 0;
-    loadR(); loadH();
+    await loadR(); await loadH();   // IndexedDB now; must land before render()
 
     /* A shapeless single chapter gets the file name as its title. */
     if (chapters.length === 1 && chapters[0].title === 'Beginning') {
@@ -63,12 +63,12 @@ async function openFromBuffer(key, buf, resume) {
 /* Fast path: a book whose parsed chapter model is already cached
    (js/library.js 'model' store). Skips pdf.js text extraction and
    structure detection entirely — a reopen is a render, not a parse. */
-function openBookFromModel(key, ch, resume) {
+async function openBookFromModel(key, ch, resume) {
   try {
     name = key;
     chapters = ch;
     cur = 0;
-    loadR(); loadH();
+    await loadR(); await loadH();   // IndexedDB now; must land before render()
 
     if (chapters.length === 1 && chapters[0].title === 'Beginning') {
       chapters[0].title = key.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ');

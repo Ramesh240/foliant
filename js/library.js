@@ -1,11 +1,14 @@
 /* ============================================================
    library.js — the bookshelf: books persist in IndexedDB so a PDF
    is imported once and reopened from the shelf, no re-upload.
-   Storage layout (db 'foliant', version 2):
+   Storage layout (db 'foliant', version 3):
      store 'meta'  — {key, title, added, last, chapters, words, pos} per book
      store 'data'  — {key, buf: ArrayBuffer} the raw PDF bytes
      store 'model' — {key, ch: chapters} the PARSED book (fast reopen:
                      skips pdf.js text extraction + structure detection)
+     store 'user'  — {key: '<book>:h' | '<book>:r', val} highlights+notes
+                     and card ratings (moved out of localStorage so a future
+                     export/import can move a whole reading session)
    Key = file name (matches the foliant-pos/h/r localStorage keys).
    Loads after config.js; ui.js is loaded before this file, so the
    shelf exists before open()/go() run. main.js calls shelfRemember()
@@ -22,12 +25,13 @@ let _db = null;
 function shelfDb() {
   if (_db) return Promise.resolve(_db);
   return new Promise((res, rej) => {
-    const rq = indexedDB.open('foliant', 2);
+    const rq = indexedDB.open('foliant', 3);
     rq.onupgradeneeded = () => {
       const db = rq.result;
       if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'key' });
       if (!db.objectStoreNames.contains('data')) db.createObjectStore('data', { keyPath: 'key' });
       if (!db.objectStoreNames.contains('model')) db.createObjectStore('model', { keyPath: 'key' });
+      if (!db.objectStoreNames.contains('user')) db.createObjectStore('user', { keyPath: 'key' });
     };
     rq.onsuccess = () => { _db = rq.result; res(_db); };
     rq.onerror = () => rej(rq.error);
@@ -42,6 +46,36 @@ function shelfTx(store, mode, fn) {
     tx.onerror = () => rej(tx.error);
     tx.onabort = () => rej(tx.error);
   }));
+}
+
+/* ---------- Reader data: highlights, notes, card ratings ----------
+   These used to live in localStorage ('foliant-h-*' / 'foliant-r-*'); they
+   now live in the 'user' store keyed '<book>:h' / '<book>:r' so they sit
+   beside the books and can be exported/imported as one session later.
+   Reads fall back to the legacy localStorage copy until the one-time
+   migration has copied it (userDataMigrate, below). */
+const userGet = key => shelfTx('user', 'readonly', s => s.get(key)).then(r => (r ? r.val : null)).catch(() => null);
+const userPut = (key, val) => shelfTx('user', 'readwrite', s => s.put({ key, val })).catch(() => {});
+
+/* One-time move of every legacy foliant-h- and foliant-r- key into the store.
+   Never overwrites an existing entry; keeps the localStorage copies as a
+   safety net (clearing site data removes both). */
+async function userDataMigrate() {
+  try {
+    if (localStorage.getItem('foliant-userdata-idb')) return;
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      let book = null, suffix = null;
+      if (k.startsWith('foliant-h-')) { book = k.slice('foliant-h-'.length); suffix = ':h'; }
+      else if (k.startsWith('foliant-r-')) { book = k.slice('foliant-r-'.length); suffix = ':r'; }
+      else continue;
+      if (await userGet(book + suffix) == null) {
+        try { await userPut(book + suffix, JSON.parse(localStorage.getItem(k) || 'null')); } catch (e) {}
+      }
+    }
+    localStorage.setItem('foliant-userdata-idb', '1');
+  } catch (e) {}
 }
 
 /* ---------- Parsed-book model cache (fast reopen) ----------
@@ -149,7 +183,7 @@ async function shelfOpen(key) {
     let spot = null;
     try { spot = JSON.parse(localStorage.getItem('foliant-spot-' + key) || 'null'); } catch (e) {}
     const ch = await modelLoad(key);
-    if (ch && openBookFromModel) { openBookFromModel(key, ch, spot); return; }
+    if (ch && openBookFromModel) { await openBookFromModel(key, ch, spot); return; }
     $('#msg').textContent = 'Opening…';
     await openFromBuffer(key, row.buf, spot);
   } catch (e) {
@@ -195,6 +229,7 @@ function shelfSaveMeta(pos) {
 
 function shelfInit() {
   if (typeof indexedDB === 'undefined') return;
+  userDataMigrate();
   const show = () => { try { localStorage.setItem(SKEY, '1'); } catch (e) {} shelfRender(); };
   try { if (!localStorage.getItem(SKEY)) { shelfMigrate().then(show); return; } } catch (e) {}
   show();

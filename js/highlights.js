@@ -16,8 +16,16 @@ let hPend = null;      // pending selection {b, s, e} awaiting a color choice
 let hT = 0;            // debounce timer for selectionchange
 let nH = null;         // highlight currently open in the note editor
 
-function loadH() { try { HLS = JSON.parse(localStorage.getItem('foliant-h-' + name) || '[]'); } catch (e) { HLS = []; } }
-function saveH() { try { localStorage.setItem('foliant-h-' + name, JSON.stringify(HLS)); } catch (e) {} }
+/* Highlights + notes live in IndexedDB ('user' store, key '<book>:h'); the
+   legacy localStorage copy is read only while the store has no entry yet
+   (userDataMigrate in js/library.js copies it over on first load). */
+async function loadH() {
+  HLS = [];
+  const v = await userGet(name + ':h');
+  if (Array.isArray(v)) { HLS = v; return; }
+  try { HLS = JSON.parse(localStorage.getItem('foliant-h-' + name) || '[]'); } catch (e) { HLS = []; }
+}
+function saveH() { userPut(name + ':h', HLS); }
 
 /* Render block text with <mark> spans for this block's highlights. */
 function hl(t, ci, bi) {

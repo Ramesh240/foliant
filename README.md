@@ -109,14 +109,16 @@ page. (Scanned PDFs need OCR first — Foliant reads text, not pictures of text.
 | `foliant-pos-<file>` | Last chapter read (legacy bookmark) |
 | `foliant-spot-<file>` | Exact spot: `{chapter, y-offset, fraction}` |
 | `foliant-wpm` | Your measured reading speed (drives "minutes left") |
-| `foliant-h-<file>` | Highlights + notes |
-| `foliant-r-<file>` | Flashcard ratings |
+| `foliant-h-<file>` | Highlights + notes (legacy copy — now in IndexedDB) |
+| `foliant-r-<file>` | Flashcard ratings (legacy copy — now in IndexedDB) |
 | `foliant-iap` | Premium entitlement cache (`{premium, at, src}`) |
 
-PDF bytes + shelf metadata live in **IndexedDB** (database `foliant`, stores
-`meta`, `data` and `model`) — `model` caches each book's *parsed* chapter
-structure, so reopening from the shelf skips PDF parsing entirely and is
-near-instant. That's what makes the shelf work offline and instantly.
+PDF bytes, shelf metadata, the parsed-book cache and your reading data live
+in **IndexedDB** (database `foliant`, stores `meta`, `data`, `model` and
+`user`) — `model` caches each book's *parsed* chapter structure so reopening
+from the shelf skips PDF parsing entirely (near-instant), and `user` holds
+highlights, notes and card ratings keyed per book, so a whole reading
+session can be exported and moved between devices later.
 
 Clearing site data resets everything.
 
