@@ -116,7 +116,9 @@ public class FoliantBillingPlugin extends Plugin {
                         dp.setOfferToken(details.get(0).getSubscriptionOfferDetails().get(0).getOfferToken());
                     }
                     client().launchBillingFlow(getActivity(),
-                        BillingFlowParams.newBuilder().setProductDetailsParams(dp.build()).build());
+                        BillingFlowParams.newBuilder()
+                            .setProductDetailsParamsList(Collections.singletonList(dp.build()))
+                            .build());
                 }));
         });
     }
