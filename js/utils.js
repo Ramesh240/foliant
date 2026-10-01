@@ -19,13 +19,18 @@ const nice = t => /[a-z\u00DF-\u00FF]/.test(t) || t.length < 4
 /* Escape &, <, > for safe HTML interpolation. */
 const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
-/* Apply settings to the DOM (theme, font, size) and persist them. */
+/* Apply settings to the DOM (theme, font, size, bars) and persist them.
+   Bar visibility (S.chrome) is data-attribute driven so CSS owns the rules
+   for touch vs mouse — desktop always keeps the top bar (hover menus). */
 function applyS() {
+  if (S.chrome !== 'both' && S.chrome !== 'top' && S.chrome !== 'bottom') S.chrome = 'both';
+  root.dataset.chrome = S.chrome;
   root.dataset.theme = S.t;
   root.dataset.font = S.f;
   root.style.setProperty('--fs', S.fs + 'px');
   $('#fs').value = S.fs;
   $('#bQa').textContent = 'Q&A cards: ' + (S.qa ? 'on' : 'off');
+  document.querySelectorAll('#bch button').forEach(b => b.classList.toggle('sel', b.dataset.c === S.chrome));
   document.querySelectorAll('#thm button').forEach(b => b.classList.toggle('sel', b.dataset.t === S.t));
   document.querySelectorAll('#fnt button').forEach(b => b.classList.toggle('sel', b.dataset.f === S.f));
   try { localStorage.setItem('foliant-s', JSON.stringify(S)); } catch (e) {}

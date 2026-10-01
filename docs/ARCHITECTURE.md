@@ -145,6 +145,10 @@ Slots map one-to-one onto existing actions — `openSheet('#sToc'/'#sHl'/'#sSet'
 bar adds no second implementation of anything. The customize editor is an ordinary
 bottom sheet (`#sNav`, also reachable from Settings) that toggles slots and an
 icons-only mode; changing anything calls `applyS()`, which re-renders the bar.
+Which chrome bars are visible is a setting too (`S.chrome: 'both'|'top'|'bottom'`,
+Settings → On-screen bars): `applyS()` mirrors it onto `<html data-chrome>` and
+nav.css owns the rules — the bottom bar can hide the top bar only on touch
+screens, because the top bar carries the hover-driven menus on desktop.
 `prev`/`next` disable at the book's edges via `navSync()`, and the reader column
 pads its bottom (`body.hasnav #book`) so the bar never covers text. Custom user
 labels are encoded in the slot id (`'-Home|home'` = home action, label "Home").
@@ -155,7 +159,11 @@ A Premium-only quick `custom` slot is render-filtered on `IAP.premium` (see
 A single non-consumable purchase (`foliant_premium`, $1.99) unlocks review,
 search and export. UI entry points call `gateFeature(id)` — `openSearch`,
 `openReview` and the Markdown copy button — which returns true when
-`IAP.premium` holds and otherwise slides up the unlock sheet (`#sIap`). The
+`IAP.premium` holds and otherwise slides up the unlock sheet (`#sIap`) — but
+only where a purchase is actually possible (Android: Play Billing bridge or
+user agent). On the web there is no store, so every Premium feature stays
+free there; the pitch sheet becomes a support note pointing to the Android
+app. The
 entitlement is cached in `localStorage['foliant-iap']` so it survives offline
 starts; under the Android shell a `window.FoliantBilling` bridge (Play Billing
 Library, see docs/PUBLISHING.md §6) is authoritative and re-verified at
@@ -164,6 +172,17 @@ to the Android app — and a localhost-only `FoliantDev.unlock()/lock()` helper
 exists for UI testing. Because the gates live at the entry points rather than
 inside the engines, `runSearch()`/`allCards()`/`hlMd()` stay honest functions
 that extensions and tests can call directly.
+
+### Fast reopen ([js/library.js](../js/library.js) model cache)
+Parsing — pdf.js text extraction plus structure detection — is the expensive
+half of opening a book, and its output depends only on the bytes. So
+`shelfRemember()` also stores the finished `chapters` array in a third
+IndexedDB store, `model`. `shelfOpen()` tries the cache first: a hit calls
+`openBookFromModel()` in main.js, which renders straight from the stored
+model (a reopen drops from ~0.4 s to ~20 ms on the sample book) and only
+re-parses when the cache row is missing or corrupt (self-healing: the row
+is deleted and the full pipeline runs). Fresh imports always parse, which
+also invalidates the cache row for re-imported files.
 
 ## Extension points
 

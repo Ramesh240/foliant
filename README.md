@@ -23,12 +23,13 @@ No build step, no framework, no server. **Your PDF never leaves your device.**
 | **Highlights & notes** | Select text → 4 colors → attach notes; export everything as Markdown |
 | **Focus mode** | Dims everything except the paragraph you tap |
 | **Bottom nav bar** | Customizable thumb-reach bar on mobile: pick up to 5 slots (chapters, search, highlights, review, settings, library, focus, prev/next), icons-only mode, saved per device |
+| **On-screen bars** | Settings → *On-screen bars*: show both bars, top only, or bottom only — on touch screens the top bar can be hidden entirely for immersive reading |
 | **Q&A review cards** | Auto-generates flashcards from headings/lists/summaries, or reads explicit `Q: … A: …` lines; flip-card review sessions with got-it / again ratings |
 | **Reading comfort** | 3 themes (paper / sepia / night), serif / sans fonts, font-size slider, progress bar |
 | **Bookshelf** | Every imported PDF is stored on-device (IndexedDB); reopen any past book from the home screen — no re-uploading |
 | **Exact resume** | Reopens at the exact viewport spot, not just the chapter |
 | **Live progress** | Per-chapter "% read · minutes left" that adapts to your measured reading speed |
-| **Foliant Premium** | One-time $1.99 unlock (Google Play Billing on Android) for Review cards, whole-book search and Markdown export; reading, highlights, shelf and themes stay free |
+| **Foliant Premium** | One-time $1.99 unlock (Google Play Billing on Android) for Review cards, whole-book search and Markdown export; reading, highlights, shelf and themes stay free. On the web there is no purchase path, so these features are simply free there — the Settings pitch points Android users to the unlock |
 
 ## Project structure
 
@@ -36,7 +37,7 @@ No build step, no framework, no server. **Your PDF never leaves your device.**
 foliant/
 ├── index.html            Shell page: markup only, loads styles + scripts in order
 ├── manifest.webmanifest  PWA manifest (installable, offline)
-├── sw.js                 Service worker: offline-first app-shell cache (v4)
+├── sw.js                 Service worker: offline-first app-shell cache (v6)
 ├── styles/               CSS split by UI concern
 │   ├── base.css          Theme tokens (paper/sepia/night), resets
 │   ├── home.css          Landing screen + drop zone
@@ -46,7 +47,7 @@ foliant/
 │   ├── library.css       Home-screen bookshelf cards
 │   ├── highlights.css    Selection toolbar, marks, notes
 │   ├── search.css        Search sheet + jump pulse
-│   ├── nav.css           Bottom navigation bar + its customize editor
+│   ├── nav.css           Reader chrome: bars visibility, bottom nav bar, chapters modal
 │   └── sheets.css        Bottom sheets + veil
 ├── js/                   ES modules-in-spirit: plain scripts sharing globals
 │   ├── config.js         pdf.js worker setup, shared state (loaded first)
@@ -103,7 +104,7 @@ page. (Scanned PDFs need OCR first — Foliant reads text, not pictures of text.
 
 | Key | Contents |
 |---|---|
-| `foliant-s` | Global settings (theme, font, size, card toggles, bottom-bar layout) |
+| `foliant-s` | Global settings (theme, font, size, card toggles, bar visibility, bottom-bar layout) |
 | `foliant-pos-<file>` | Last chapter read (legacy bookmark) |
 | `foliant-spot-<file>` | Exact spot: `{chapter, y-offset, fraction}` |
 | `foliant-wpm` | Your measured reading speed (drives "minutes left") |
@@ -112,7 +113,9 @@ page. (Scanned PDFs need OCR first — Foliant reads text, not pictures of text.
 | `foliant-iap` | Premium entitlement cache (`{premium, at, src}`) |
 
 PDF bytes + shelf metadata live in **IndexedDB** (database `foliant`, stores
-`meta` and `data`) — that's what makes the shelf work offline and instantly.
+`meta`, `data` and `model`) — `model` caches each book's *parsed* chapter
+structure, so reopening from the shelf skips PDF parsing entirely and is
+near-instant. That's what makes the shelf work offline and instantly.
 
 Clearing site data resets everything.
 

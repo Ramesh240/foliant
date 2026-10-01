@@ -27,8 +27,10 @@ let cur = 0;            // index of the chapter being read
 let name = '';          // PDF file name; keys all per-book localStorage
 let focus = false;      // focus mode toggle
 
-/* Reading settings, persisted to localStorage under 'foliant-s'. */
-let S = { fs: 20, t: 'paper', f: 'serif', qa: true, auto: true };
+/* Reading settings, persisted to localStorage under 'foliant-s'.
+   chrome: which on-screen bars are visible in the reader —
+   'both' | 'top' | 'bottom' (top = chapter bar, bottom = reading nav). */
+let S = { fs: 20, t: 'paper', f: 'serif', qa: true, auto: true, chrome: 'both' };
 try { Object.assign(S, JSON.parse(localStorage.getItem('foliant-s') || '{}')); } catch (e) {}
 
 /* Flashcard ratings { cardId: 'done' | 'again' }, per book: 'foliant-r-<name>'. */

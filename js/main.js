@@ -20,6 +20,7 @@ async function openFromBuffer(key, buf, resume) {
     }
 
     chapters = build(L);
+    modelSave(key, chapters);   // cache the parsed book for instant reopen
     cur = 0;
     loadR(); loadH();
 
@@ -55,6 +56,49 @@ async function openFromBuffer(key, buf, resume) {
     return true;
   } catch (err) {
     $('#msg').textContent = 'Could not read this PDF. It may be password protected or damaged.';
+    return false;
+  }
+}
+
+/* Fast path: a book whose parsed chapter model is already cached
+   (js/library.js 'model' store). Skips pdf.js text extraction and
+   structure detection entirely — a reopen is a render, not a parse. */
+function openBookFromModel(key, ch, resume) {
+  try {
+    name = key;
+    chapters = ch;
+    cur = 0;
+    loadR(); loadH();
+
+    if (chapters.length === 1 && chapters[0].title === 'Beginning') {
+      chapters[0].title = key.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ');
+    }
+
+    let want = null;
+    try {
+      const s = +localStorage.getItem('foliant-pos-' + name);
+      if (s >= 0 && s < chapters.length) cur = s;
+    } catch (e) {}
+    if (resume && resume.ci >= 0 && resume.ci < chapters.length) {
+      cur = resume.ci;
+      want = resume;
+    }
+
+    $('#title').textContent = key.replace(/\.pdf$/i, '');
+    $('#home').classList.add('hide');
+    $('#reader').classList.remove('hide');
+    if (want) SKIP_RENDER_SCROLL = true;
+    render();
+    SKIP_RENDER_SCROLL = false;
+    if (typeof navOnOpen === 'function') navOnOpen();
+    applyS();                                        // keep chrome (bars) in sync
+    if (typeof loadFigs === 'function') loadFigs();   // figures live in the PDF, not the model
+    if (want) restoreScroll(want);
+    $('#msg').textContent = '';
+    return true;
+  } catch (err) {
+    /* Corrupt cache row: drop it so the next attempt re-parses the PDF. */
+    try { modelDel(key); } catch (e) {}
     return false;
   }
 }

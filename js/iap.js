@@ -80,7 +80,7 @@ function iapUnlockSheet(f) {
           '<div class="row"><button id="iapRestore">Restore purchase</button></div>' +
           (bridge ? '' : '<div class="nnv">Store sign-in is unavailable in this build — install the latest app release from Play to purchase.</div>')
         : '<div class="row"><button class="sel" id="iapClose">Got it</button></div>' +
-          '<div class="nnv">Premium is a one-time ' + esc(IAP_PRICE) + ' unlock in the Foliant Android app.</div>') +
+          '<div class="nnv">Reading stays free on foliant.web.app — Premium (search, review cards, Markdown export) is a one-time ' + esc(IAP_PRICE) + ' unlock in the Foliant Android app.</div>') +
     '<div class="nnv" id="iapMsg"></div>';
   openSheet('#sIap');
 }
@@ -107,11 +107,18 @@ $('#sIap').onclick = async e => {
 
 /* ---------- Gate + startup ---------- */
 
+/* This build can only sell through Google Play (Android + the native
+   billing bridge), so the gate applies there. On web there is no purchase
+   path — paywalling features nobody could ever buy would make buttons feel
+   broken — so Premium features stay free and the pitch is a support note.
+   Revisit if a web payment provider (Stripe / Paddle) is ever added. */
+const iapAndroid = () => !!window.FoliantBilling || /Android/i.test(navigator.userAgent);
+
 /* Central gate: UI calls this before running a premium feature.
    Returns true when allowed; otherwise shows the unlock sheet. */
 function gateFeature(f) {
   if (!PREMIUM_FEATURES[f]) return true;             // unknown id -> never block
-  if (IAP.premium) return true;
+  if (IAP.premium || !iapAndroid()) return true;     // web: no purchase path
   iapUnlockSheet(f);
   return false;
 }

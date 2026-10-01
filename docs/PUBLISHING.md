@@ -105,6 +105,13 @@ that unlocks three value-add features: **Review cards**, **whole-book search** a
 bar stay free. The entitlement is cached in `localStorage['foliant-iap']` so
 Premium works offline; the Android bridge is authoritative on startup.
 
+> **Web = free.** `gateFeature()` only gates where a purchase is actually
+> possible — Android (Play Billing bridge or UA). On the web there is no way
+> to buy, so search / review / export stay free there and the Settings pitch
+> simply points readers to the Android app. Don't "fix" this by re-gating the
+> web UI: paywalling features nobody on that origin can buy makes the buttons
+> feel broken.
+
 ### 6.1 Create the product in Play Console
 
 1. Play Console → Foliant → **Monetize → Products → In-app products** → *Create product*.
@@ -130,7 +137,8 @@ Implement it in `android/app/src/main/java/.../MainActivity.java` with the
 `iapSetPremium(true, 'play')` (exposed globally by [js/iap.js](../js/iap.js))
 whenever ownership is confirmed — at startup via `queryPurchasesAsync` and after
 `purchase()` resolves. Until the bridge exists, the app degrades gracefully:
-web users see a "Get Premium in the Android app" sheet, and the dev helper
+web users get the features free (no purchase path on that origin), Android
+users see the Play purchase sheet, and the dev helper
 `FoliantDev.unlock()` / `FoliantDev.lock()` (localhost only) simulates the
 purchase for UI testing.
 
@@ -141,7 +149,7 @@ purchase for UI testing.
 3. Buy the product with a **test card** (never your real card while the
    license-testing account is set).
 4. Kill + reopen the app → Premium still on (cached) and re-verified.
-5. Web app: search/review/export show the unlock sheet; after an Android
-   purchase, `Restore purchase` on the web pitch sheet returns `ok` only once
-   the account backend exists — until then web Premium comes from the cache
-   written by the Android bridge.
+5. Web app: search/review/export are free (no purchase path on web); on
+   Android without Premium they show the unlock sheet. After an Android
+   purchase, Premium is cached by the bridge and honored on the web if a
+   cross-device sync backend is ever added.

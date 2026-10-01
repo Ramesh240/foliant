@@ -1,12 +1,33 @@
 /* ============================================================
-   nav.css — customizable bottom navigation bar (thumb reach)
+   nav.css — reader chrome: top/bottom bar visibility, the
+   customizable bottom nav, and the centered chapter sheet.
    Buttons render from S.nav (js/nav.js); labels sit under icons,
    fixed 56px height, safe-area padded, hidden in home/pick mode.
+
+   Bar visibility (Settings → On-screen bars, S.chrome in utils.js):
+     html[data-chrome="both"]    top bar + bottom nav
+     html[data-chrome="top"]     top bar only — bottom nav hidden
+     html[data-chrome="bottom"]  bottom nav only — top bar hidden on
+                                 touch devices (desktop keeps the top
+                                 bar, which carries hover menus)
    ============================================================ */
 
+/* ---------- Visibility of the chrome bars ---------- */
+html[data-chrome="top"] #navb{display:none!important}
+html[data-chrome="top"] body.hasnav #book{padding-bottom:120px}
+
+@media(pointer:coarse){
+  html[data-chrome="bottom"] #top{display:none}
+  html[data-chrome="bottom"] #book{scroll-padding-top:12px}
+}
+@media(hover:hover) and (pointer:fine){
+  html[data-chrome="bottom"] #top #bar button:not(#bNew){display:none}
+}
+
+/* ---------- Bottom navigation bar ---------- */
 #navb{
   position:fixed;left:0;right:0;bottom:0;z-index:6;
-  display:flex;justify-content:space-around;align-items:stretch;
+  display:flex;justify-content:center;align-items:stretch;
   background:color-mix(in srgb,var(--card) 94%,transparent);
   backdrop-filter:blur(10px);
   border-top:1px solid var(--line);
@@ -14,10 +35,13 @@
   box-shadow:0 -6px 24px #0002;
 }
 #navb button{
-  flex:1;max-width:96px;min-width:0;
-  display:flex;flex-direction:column;align-items:center;gap:2px;
+  flex:0 1 96px;min-width:44px;width:96px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   padding:7px 2px 6px;color:var(--mute);
 }
+/* Many buttons: shrink evenly instead of overflowing the row */
+#navb button:nth-child(n+6){flex-basis:64px;width:64px;min-width:0}
+#navb button:nth-child(n+8){flex-basis:52px;width:52px}
 #navb button .ni{font-size:19px;line-height:1.1}
 #navb button .nl{font:600 10px Inter,sans-serif;letter-spacing:.01em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
@@ -30,13 +54,36 @@
 
 /* The reader column keeps its own bottom clearance so the last lines
    of a chapter are never hidden behind the bar. */
-body.hasnav #book{padding-bottom:170px}
-
-/* Sheets slide up above the bar. */
-.sheet{bottom:56px}
+body.hasnav #book{padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
+@media(pointer:coarse){body.hasnav #book{padding-bottom:calc(122px + env(safe-area-inset-bottom,0px))}}
 
 /* Floating selection toolbar clears the bar too. */
 #hbar{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+
+/* Sheets sit above the bottom bar on touch screens; on mouse devices
+   they keep the full-sheet feel of sheets.css. */
+@media(pointer:coarse){.sheet{bottom:calc(56px + env(safe-area-inset-bottom,0px))}}
+
+/* ---------- Chapters: centered, scrollable modal card ---------- */
+/* Replaces the old full-width bottom sheet: floats mid-screen on every
+   size, capped to the viewport so long chapter lists scroll inside. */
+.sheet.toc{
+  left:50%;right:auto;bottom:auto;top:50%;
+  width:min(440px,calc(100vw - 32px));
+  max-height:min(560px,calc(100dvh - 96px));
+  transform:translate(-50%,-50%);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:0 24px 70px #0005;
+  overscroll-behavior:contain;
+  padding-bottom:16px;
+}
+@media(pointer:coarse){.sheet.toc{bottom:auto}}
+.toc h4{position:sticky;top:-20px;margin:-20px -22px 0;padding:18px 22px 12px;
+  background:var(--card);border-bottom:1px solid var(--line);z-index:1}
+.toc button{display:block;width:100%;text-align:left;padding:12px 4px;border-bottom:1px solid var(--line);font:500 17px Newsreader,serif}
+.toc button:last-child{border-bottom:0}
+.toc button.cur{color:var(--acc);font-weight:700}
 
 /* ---------- Customize sheet ---------- */
 .npz{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin:4px 0 14px}

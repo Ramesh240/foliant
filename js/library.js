@@ -1,9 +1,11 @@
 /* ============================================================
    library.js — the bookshelf: books persist in IndexedDB so a PDF
    is imported once and reopened from the shelf, no re-upload.
-   Storage layout (db 'foliant', version 1):
+   Storage layout (db 'foliant', version 2):
      store 'meta'  — {key, title, added, last, chapters, words, pos} per book
      store 'data'  — {key, buf: ArrayBuffer} the raw PDF bytes
+     store 'model' — {key, ch: chapters} the PARSED book (fast reopen:
+                     skips pdf.js text extraction + structure detection)
    Key = file name (matches the foliant-pos/h/r localStorage keys).
    Loads after config.js; ui.js is loaded before this file, so the
    shelf exists before open()/go() run. main.js calls shelfRemember()
@@ -20,11 +22,12 @@ let _db = null;
 function shelfDb() {
   if (_db) return Promise.resolve(_db);
   return new Promise((res, rej) => {
-    const rq = indexedDB.open('foliant', 1);
+    const rq = indexedDB.open('foliant', 2);
     rq.onupgradeneeded = () => {
       const db = rq.result;
       if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'key' });
       if (!db.objectStoreNames.contains('data')) db.createObjectStore('data', { keyPath: 'key' });
+      if (!db.objectStoreNames.contains('model')) db.createObjectStore('model', { keyPath: 'key' });
     };
     rq.onsuccess = () => { _db = rq.result; res(_db); };
     rq.onerror = () => rej(rq.error);
@@ -41,8 +44,26 @@ function shelfTx(store, mode, fn) {
   }));
 }
 
+/* ---------- Parsed-book model cache (fast reopen) ----------
+
+   Parsing a PDF (pdf.js text extraction + structure detection) is the
+   slow part of opening a book, and its output only depends on the bytes.
+   Cache the built chapter list per key; openFromBuffer (main.js) uses it
+   when present and re-parses only when absent (first open / old shelf
+   rows / cache drop). Plain objects only — IndexedDB-safe as-is. */
+function modelSave(key, ch) {
+  try { return shelfPut('model', { key, ch }); } catch (e) { return Promise.resolve(); }
+}
+function modelLoad(key) {
+  return shelfGet('model', key).then(r => (r && Array.isArray(r.ch) && r.ch.length) ? r.ch : null).catch(() => null);
+}
+function modelDel(key) { return shelfDel('model', key).catch(() => {}); }
+
 const shelfGet = (store, key) => shelfTx(store, 'readonly', s => s.get(key));
-const shelfPut = (store, val) => shelfTx(store, 'readwrite', s => s.put(val));
+function shelfPut(store, val) {
+  if (typeof val !== 'object' || val === null) return Promise.reject(new Error('shelfPut: not an object'));
+  return shelfTx(store, 'readwrite', s => s.put(val));
+}
 const shelfDel = (store, key) => shelfTx(store, 'readwrite', s => s.delete(key));
 const shelfAllMeta = () => shelfTx('meta', 'readonly', s => s.getAll());
 
@@ -100,7 +121,7 @@ document.addEventListener('click', e => {
     e.stopPropagation();
     const key = del.dataset.del;
     if (confirm('Remove "' + key.replace(/\.pdf$/i, '') + '" from your shelf? Its highlights stay in this browser until you clear site data.')) {
-      shelfDel('data', key).then(() => shelfDel('meta', key)).then(shelfRender).catch(() => {});
+      shelfDel('data', key).then(() => shelfDel('meta', key)).then(() => modelDel(key)).then(shelfRender).catch(() => {});
     }
     return;
   }
@@ -118,14 +139,18 @@ function shelfImport(key, buf) {
   }).catch(() => {});
 }
 
-/* Reopen a stored book: zero parsing, restore the exact saved spot. */
+/* Reopen a stored book from the cached parsed model (no PDF parsing).
+   Mirrors the position logic of openFromBuffer; misses fall through to
+   the full pipeline, which re-populates the cache. */
 async function shelfOpen(key) {
   try {
     const row = await shelfGet('data', key);
     if (!row) { $('#msg').textContent = 'That book is no longer stored.'; return; }
-    $('#msg').textContent = 'Opening…';
     let spot = null;
     try { spot = JSON.parse(localStorage.getItem('foliant-spot-' + key) || 'null'); } catch (e) {}
+    const ch = await modelLoad(key);
+    if (ch && openBookFromModel) { openBookFromModel(key, ch, spot); return; }
+    $('#msg').textContent = 'Opening…';
     await openFromBuffer(key, row.buf, spot);
   } catch (e) {
     $('#msg').textContent = 'Could not open that book.';
@@ -137,6 +162,7 @@ async function shelfOpen(key) {
 function shelfRemember(key, buf, wordCount) {
   return Promise.all([
     buf ? shelfPut('data', { key, buf }).catch(() => {}) : Promise.resolve(),
+    modelSave(key, chapters),
     shelfGet('meta', key).then(prev =>
       shelfPut('meta', {
         key,
