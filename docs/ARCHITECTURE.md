@@ -151,7 +151,12 @@ thumb-reach reading — and an explicit chip tap sets `S.chromePicked`, which
 pins the choice over that default on every later load: `applyS()` mirrors the
 value onto `<html data-chrome>` and
 nav.css owns the rules — the bottom bar can hide the top bar only on touch
-screens, because the top bar carries the hover-driven menus on desktop.
+screens, because the top bar carries the hover-driven menus on desktop. In
+bottom-only mode the reading-progress line survives as a fixed hairline on
+the nav bar's top edge (`--navh` pins the bar height so sheets, the selection
+toolbar and the hairline all anchor exactly); the top bar must drop its
+`backdrop-filter` there, because a filter makes it a containing block that
+would anchor the fixed line to `#top` instead of the viewport.
 `prev`/`next` disable at the book's edges via `navSync()`, and the reader column
 pads its bottom (`body.hasnav #book`) so the bar never covers text. Custom user
 labels are encoded in the slot id (`'-Home|home'` = home action, label "Home").

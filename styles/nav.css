@@ -9,15 +9,32 @@
      html[data-chrome="top"]     top bar only — bottom nav hidden
      html[data-chrome="bottom"]  bottom nav only — top bar hidden on
                                  touch devices (desktop keeps the top
-                                 bar, which carries hover menus)
+                                 bar, which carries hover menus); the
+                                 reading-progress line rides the nav
+                                 bar's top edge as a hairline
    ============================================================ */
+
+/* Height of the bottom nav bar's button row (safe-area inset adds on top).
+   Pinned so sheets, the selection toolbar and the bottom-only progress
+   hairline all anchor exactly to the bar's top edge. */
+:root{--navh:56px}
 
 /* ---------- Visibility of the chrome bars ---------- */
 html[data-chrome="top"] #navb{display:none!important}
 html[data-chrome="top"] body.hasnav #book{padding-bottom:120px}
 
 @media(pointer:coarse){
-  html[data-chrome="bottom"] #top{display:none}
+  /* Bottom-only reading: the top bar's buttons go away, but its progress
+     line stays as a fixed hairline riding the nav bar's top edge. #top must
+     drop its backdrop-filter — a filter makes it a containing block, which
+     would anchor the fixed hairline to #top instead of the viewport. */
+  html[data-chrome="bottom"] #top{position:static;border-bottom:0;background:none;backdrop-filter:none}
+  html[data-chrome="bottom"] #bar{display:none}
+  html[data-chrome="bottom"] #prog{
+    position:fixed;left:0;right:0;z-index:7;
+    bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px));
+    background:transparent;box-shadow:0 -1px 5px #0001;
+  }
   html[data-chrome="bottom"] #book{scroll-padding-top:12px}
 }
 @media(hover:hover) and (pointer:fine){
@@ -27,6 +44,7 @@ html[data-chrome="top"] body.hasnav #book{padding-bottom:120px}
 /* ---------- Bottom navigation bar ---------- */
 #navb{
   position:fixed;left:0;right:0;bottom:0;z-index:6;
+  height:calc(var(--navh) + env(safe-area-inset-bottom,0px));
   display:flex;justify-content:center;align-items:stretch;
   background:color-mix(in srgb,var(--card) 94%,transparent);
   backdrop-filter:blur(10px);
@@ -58,11 +76,11 @@ body.hasnav #book{padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
 @media(pointer:coarse){body.hasnav #book{padding-bottom:calc(122px + env(safe-area-inset-bottom,0px))}}
 
 /* Floating selection toolbar clears the bar too. */
-#hbar{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+#hbar{bottom:calc(var(--navh) + 16px + env(safe-area-inset-bottom,0px))}
 
 /* Sheets sit above the bottom bar on touch screens; on mouse devices
    they keep the full-sheet feel of sheets.css. */
-@media(pointer:coarse){.sheet{bottom:calc(56px + env(safe-area-inset-bottom,0px))}}
+@media(pointer:coarse){.sheet{bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px))}}
 
 /* ---------- Chapters: centered, scrollable modal card ---------- */
 /* Replaces the old full-width bottom sheet: floats mid-screen on every
