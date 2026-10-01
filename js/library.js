@@ -101,6 +101,86 @@ function shelfPut(store, val) {
 const shelfDel = (store, key) => shelfTx(store, 'readwrite', s => s.delete(key));
 const shelfAllMeta = () => shelfTx('meta', 'readonly', s => s.getAll());
 
+/* ---------- Whole-session export / import ----------
+   One JSON file with everything a reader produced: the shelf (metadata +
+   raw PDF bytes), parsed-book caches, and the 'user' store (highlights,
+   notes, ratings) — plus exact reading positions. Books become base64 so
+   the file is plain JSON; import restores all four stores and re-renders
+   the shelf. Byte keys stay per-book so nothing else needs to change. */
+
+const b64 = {
+  enc(buf) {
+    const u = new Uint8Array(buf), s = [], CH = 0x8000;
+    for (let i = 0; i < u.length; i += CH) s.push(String.fromCharCode.apply(null, u.subarray(i, i + CH)));
+    return btoa(s.join(''));
+  },
+  dec(str) {
+    const bin = atob(str), u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return u.buffer;
+  }
+};
+
+/* localStorage keys that belong to the session: per-book positions and
+   global reading prefs. Flags (shelf-on, migration markers) and the
+   store-bound entitlement (foliant-iap) stay device-local on purpose. */
+const SESSION_LS = [/^foliant-pos-/, /^foliant-spot-/, /^foliant-s$/, /^foliant-wpm$/];
+
+/* Gather everything, resolve when the snapshot is complete. */
+async function sessionExport() {
+  const [metas, datas, models, users] = await Promise.all([
+    shelfTx('meta', 'readonly', s => s.getAll()),
+    shelfTx('data', 'readonly', s => s.getAll()),
+    shelfTx('model', 'readonly', s => s.getAll()),
+    shelfTx('user', 'readonly', s => s.getAll())
+  ]);
+  const ls = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && SESSION_LS.some(re => re.test(k))) ls.push({ k, v: localStorage.getItem(k) });
+    }
+  } catch (e) {}
+  return {
+    app: 'foliant-session',
+    v: 1,
+    at: Date.now(),
+    meta: metas || [],
+    data: (datas || []).map(r => ({ key: r.key, b64: b64.enc(r.buf) })),
+    model: models || [],
+    user: users || [],
+    ls
+  };
+}
+
+/* Restore a snapshot: replaces matching rows, keeps anything not mentioned
+   in the file (so a partial export never deletes existing books). */
+async function sessionImport(snap) {
+  if (!snap || snap.app !== 'foliant-session' || !Array.isArray(snap.meta)) {
+    throw new Error('Not a Foliant session file');
+  }
+  const db = await shelfDb();
+  await new Promise((res, rej) => {
+    const tx = db.transaction(['meta', 'data', 'model', 'user'], 'readwrite');
+    const m = tx.objectStore('meta'), d = tx.objectStore('data'),
+          mo = tx.objectStore('model'), u = tx.objectStore('user');
+    snap.meta.forEach(r => r && r.key && m.put(r));
+    (snap.model || []).forEach(r => r && r.key && mo.put(r));
+    (snap.user || []).forEach(r => r && r.key && u.put(r));
+    (snap.data || []).forEach(r => {
+      if (!r || !r.key || typeof r.b64 !== 'string') return;
+      try { d.put({ key: r.key, buf: b64.dec(r.b64) }); } catch (e) {}
+    });
+    tx.oncomplete = res;
+    tx.onerror = () => rej(tx.error);
+    tx.onabort = () => rej(tx.error);
+  });
+  /* Restore per-book positions + prefs (the file's copy wins; keys the file
+     does not mention keep their local values). */
+  try { (snap.ls || []).forEach(r => { if (r && r.k) localStorage.setItem(r.k, r.v); }); } catch (e) {}
+  shelfRender();
+}
+
 /* One-time migration: keep chapter positions of books read before the shelf. */
 async function shelfMigrate() {
   try {

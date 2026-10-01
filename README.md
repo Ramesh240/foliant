@@ -28,6 +28,7 @@ No build step, no framework, no server. **Your PDF never leaves your device.**
 | **Q&A review cards** | Auto-generates flashcards from headings/lists/summaries, or reads explicit `Q: … A: …` lines; flip-card review sessions with got-it / again ratings |
 | **Reading comfort** | 3 themes (paper / sepia / night), serif / sans fonts, font-size slider, progress bar |
 | **Bookshelf** | Every imported PDF is stored on-device (IndexedDB); reopen any past book from the home screen — no re-uploading |
+| **Session export/import** | Settings → *Export reading session*: one JSON file with your shelf, books, highlights, notes, ratings and exact positions — move a whole reading session to another device |
 | **Exact resume** | Reopens at the exact viewport spot, not just the chapter |
 | **Live progress** | Per-chapter "% read · minutes left" that adapts to your measured reading speed |
 | **Foliant Premium** | One-time $1.99 unlock (Google Play Billing on Android) for Review cards, whole-book search and Markdown export; reading, highlights, shelf and themes stay free. On the web there is no purchase path, so these features are simply free there — the Settings pitch points Android users to the unlock |

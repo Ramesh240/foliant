@@ -23,9 +23,16 @@
 
 let PDFDOC = null;   // the open pdf.js document, reused by figures.js
 
-/* How many pages a book needs before a second/third worker lane pays for
-   its startup (worker script + document parse). */
-const parseLANES = n => n >= 240 ? 3 : n >= 120 ? 2 : 1;
+/* Lane count scales with the device: one lane per ~2 reported cores,
+   capped at 3 — each lane owns a full document copy, so more trades memory
+   for diminishing returns (the shared main thread does all postprocessing).
+   Books under parseMINPAGES keep one lane: worker + document setup (~250ms
+   per lane) would outweigh the win. */
+const parseMINPAGES = 120;
+const parseLANES = () => {
+  const cores = navigator.hardwareConcurrency || 4;
+  return Math.max(1, Math.min(3, Math.floor(cores / 2)));
+};
 /* Concurrency inside ONE document (overlaps main-thread postprocessing with
    the worker; the worker itself serializes heavy page work). */
 const parsePAGES = 4;
@@ -227,7 +234,7 @@ async function parse(buf) {
   const pdf = await pdfjsLib.getDocument({ data: buf.slice(0), verbosity: 0 }).promise;
   PDFDOC = pdf;
   const N = pdf.numPages, msg = $('#msg');
-  const W = typeof pdfjsLib.PDFWorker === 'function' ? parseLANES(N) : 1;
+  const W = typeof pdfjsLib.PDFWorker === 'function' && N >= parseMINPAGES ? parseLANES() : 1;
 
   if (W === 1) {
     const perPage = await pool(N, parsePAGES,

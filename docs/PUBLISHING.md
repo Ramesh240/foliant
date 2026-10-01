@@ -96,6 +96,7 @@ Bump in two places, then push:
 
 - `package.json` → `"version"`
 - `android/app/build.gradle` → `versionCode` (+1 each release) and `versionName`
+  (currently **2** / **1.1**)
 
 ## 6. Premium unlock ($1.99 one-time, Google Play Billing)
 
@@ -147,14 +148,46 @@ On plain web there is still no purchase path: web users get the features free
 and the dev helper `FoliantDev.unlock()` / `FoliantDev.lock()` (localhost only)
 simulates the purchase for UI testing.
 
-### 6.3 Testing checklist
+### 6.3 Testing checklist — internal testing release, step by step
 
-1. Play Console → **Testing → Internal testing** → add your Gmail as tester.
-2. Upload an AAB to the internal track; install via the opt-in link.
-3. Buy the product with a **test card** (never your real card while the
-   license-testing account is set).
-4. Kill + reopen the app → Premium still on (cached) and re-verified.
-5. Web app: search/review/export are free (no purchase path on web); on
-   Android without Premium they show the unlock sheet. After an Android
-   purchase, Premium is cached by the bridge and honored on the web if a
-   cross-device sync backend is ever added.
+Current state: versionCode **2**, versionName **1.1**; the Billing bridge
+(`FoliantBillingPlugin`) ships in the APK; the web app is deployed with the
+same build.
+
+**Before you can upload anything** — Play developer account:
+
+1. Register at play.google.com/console (one-time **$25**; identity
+   verification can take a couple of days).
+2. Play Console → **All apps → Create app**: name *Foliant*, default
+   language, *App*, *Free*. Accept the declarations.
+
+**Create the release (once CI is green):**
+
+3. Download the signed AAB artifact `foliant-release-aab` from the green
+   Android workflow run on GitHub (Actions → Android release build → run →
+   Artifacts).
+4. Play Console → **Testing → Internal testing** → *Create new release*.
+5. Under *App signing*: accept Play App Signing (Google holds the release
+   key from the first upload; your CI keystore is the upload key).
+6. Upload the `.aab`, name the release (e.g. *1.1 – billing bridge*), add
+   release notes, then **Review release → Start rollout to Internal testing**.
+7. **Testers tab** → create an email list (your Gmail), copy the
+   *opt-in link*, open it on your phone and accept. Install the app from
+   the Play Store page that appears.
+
+**Purchase testing (needs the product from §6.1 to be ACTIVE):**
+
+8. In Play Console → **Monetize → Testing → License testing**, add the same
+   Gmail so purchases use test cards instead of real money.
+9. On the phone: open Foliant → Settings → *Foliant Premium* → *Unlock with
+   Google Play* → complete the test purchase.
+10. Kill + reopen the app → Premium still on (cached, re-verified against
+    Play at startup via the bridge's `restore()`).
+11. Test the refund path: Play Console → **Order management** → refund the
+    test order → reopen the app → Premium should drop (startup `restore()`
+    no longer confirms ownership).
+
+**Web remains free** (no purchase path): search/review/export are free on
+the site; only the Android shell can sell, and an Android purchase is cached
+per device (`foliant-iap`). A cross-device sync backend could honor it on
+web later.

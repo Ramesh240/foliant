@@ -201,6 +201,44 @@ $('#bQa').onclick = () => { S.qa = !S.qa; applyS(); const y = scrollY; render();
 $('#bNav').onclick = () => openNavSheet();
 $('#bPrem').onclick = () => iapUnlockSheet();   // no arg -> full Premium pitch
 
+/* ---------- Whole-session export / import (library.js) ----------
+   One JSON file: shelf books (bytes included), parsed-model caches,
+   highlights/notes/ratings and exact positions. */
+$('#bExp').onclick = async () => {
+  const btn = $('#bExp');
+  try {
+    btn.textContent = 'Packing…';
+    const snap = await sessionExport();
+    const stamp = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([JSON.stringify(snap)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'foliant-session-' + stamp + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    btn.textContent = 'Exported ✓';
+  } catch (e) {
+    btn.textContent = 'Export failed';
+  }
+  setTimeout(() => { btn.textContent = 'Export reading session'; }, 2200);
+};
+$('#bImp').onclick = () => $('#impFile').click();
+$('#impFile').onchange = async e => {
+  const f = e.target.files[0];
+  e.target.value = '';                       // allow re-picking the same file
+  if (!f) return;
+  const btn = $('#bImp');
+  try {
+    btn.textContent = 'Importing…';
+    const snap = JSON.parse(await f.text());
+    await sessionImport(snap);
+    btn.textContent = 'Imported ✓';
+  } catch (err) {
+    btn.textContent = err && /Not a Foliant/.test(err.message) ? 'Not a session file' : 'Import failed';
+  }
+  setTimeout(() => { btn.textContent = 'Import reading session'; }, 2600);
+};
+
 /* ---------- Touch gesture: swipe left / right to flip chapters ----------
    Horizontal intent locks the axis (vertical scrolling, pinch zoom and text
    selection are untouched — a live selection aborts the gesture). Code
