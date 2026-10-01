@@ -23,7 +23,7 @@ No build step, no framework, no server. **Your PDF never leaves your device.**
 | **Highlights & notes** | Select text → 4 colors → attach notes; export everything as Markdown |
 | **Focus mode** | Dims everything except the paragraph you tap |
 | **Bottom nav bar** | Customizable thumb-reach bar on mobile: pick up to 5 slots (chapters, search, highlights, review, settings, library, focus, prev/next), icons-only mode, saved per device |
-| **On-screen bars** | Settings → *On-screen bars*: show both bars, top only, or bottom only — on touch screens the top bar can be hidden entirely for immersive reading |
+| **On-screen bars** | Settings → *On-screen bars*: show both bars, top only, or bottom only — phones and tablets start in **bottom-only** single-bar reading mode, and the top bar can be hidden entirely for immersion |
 | **Q&A review cards** | Auto-generates flashcards from headings/lists/summaries, or reads explicit `Q: … A: …` lines; flip-card review sessions with got-it / again ratings |
 | **Reading comfort** | 3 themes (paper / sepia / night), serif / sans fonts, font-size slider, progress bar |
 | **Bookshelf** | Every imported PDF is stored on-device (IndexedDB); reopen any past book from the home screen — no re-uploading |

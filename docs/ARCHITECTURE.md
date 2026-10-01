@@ -146,7 +146,10 @@ bar adds no second implementation of anything. The customize editor is an ordina
 bottom sheet (`#sNav`, also reachable from Settings) that toggles slots and an
 icons-only mode; changing anything calls `applyS()`, which re-renders the bar.
 Which chrome bars are visible is a setting too (`S.chrome: 'both'|'top'|'bottom'`,
-Settings → On-screen bars): `applyS()` mirrors it onto `<html data-chrome>` and
+Settings → On-screen bars). Touch devices start in `'bottom'` — single-bar,
+thumb-reach reading — and an explicit chip tap sets `S.chromePicked`, which
+pins the choice over that default on every later load: `applyS()` mirrors the
+value onto `<html data-chrome>` and
 nav.css owns the rules — the bottom bar can hide the top bar only on touch
 screens, because the top bar carries the hover-driven menus on desktop.
 `prev`/`next` disable at the book's edges via `navSync()`, and the reader column

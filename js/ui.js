@@ -190,7 +190,13 @@ function toggleFocus(btn) {
   if (b) b.textContent = 'Focus mode: ' + (focus ? 'on' : 'off');
 }
 $('#bFocus').onclick = e => toggleFocus(e.target);
-$('#bch').onclick = e => { const b = e.target.closest('button'); if (b) { S.chrome = b.dataset.c; applyS(); } };
+$('#bch').onclick = e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  S.chrome = b.dataset.c;
+  S.chromePicked = true;   // explicit choice: beats the touch-device default
+  applyS();
+};
 $('#bQa').onclick = () => { S.qa = !S.qa; applyS(); const y = scrollY; render(); scrollTo(0, y); };
 $('#bNav').onclick = () => openNavSheet();
 $('#bPrem').onclick = () => iapUnlockSheet();   // no arg -> full Premium pitch

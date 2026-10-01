@@ -29,9 +29,17 @@ let focus = false;      // focus mode toggle
 
 /* Reading settings, persisted to localStorage under 'foliant-s'.
    chrome: which on-screen bars are visible in the reader —
-   'both' | 'top' | 'bottom' (top = chapter bar, bottom = reading nav). */
+   'both' | 'top' | 'bottom' (top = chapter bar, bottom = reading nav).
+   Phones and tablets start in 'bottom' (single-bar, thumb-reach reading:
+   nav.css hides the top bar on coarse pointers); desktops keep both bars.
+   Tapping a bar chip in Settings sets chromePicked, which pins the choice
+   on every later load. */
 let S = { fs: 20, t: 'paper', f: 'serif', qa: true, auto: true, chrome: 'both' };
-try { Object.assign(S, JSON.parse(localStorage.getItem('foliant-s') || '{}')); } catch (e) {}
+try {
+  const saved = JSON.parse(localStorage.getItem('foliant-s') || '{}');
+  Object.assign(S, saved);
+  if (!saved.chromePicked && matchMedia('(pointer:coarse)').matches) S.chrome = 'bottom';
+} catch (e) {}
 
 /* Flashcard ratings { cardId: 'done' | 'again' }, per book: 'foliant-r-<name>'. */
 let R = {};
