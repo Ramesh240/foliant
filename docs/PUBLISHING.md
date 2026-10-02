@@ -70,9 +70,10 @@ Do **not** commit the keystore itself. It's already in `.gitignore`.
 1. Register at [play.google.com/console](https://play.google.com/console) —
    $25 one-time, identity verification required.
 2. **All apps → Create app**: name *Foliant*, default language, *App*, *Free*.
-3. Complete the required declarations (privacy policy URL — use the GitHub Pages
-   URL of this repo; content rating questionnaire; data safety: *no data collected,
-   everything stays on device* — true for Foliant).
+3. Complete the required declarations (privacy policy URL — use
+   `https://ramesh240.github.io/foliant/privacy.html`, which ships with the app
+   and is linked from the Settings sheet; content rating questionnaire; data
+   safety: *no data collected, everything stays on device* — true for Foliant).
 4. **Production → Create release**: upload `app-release.aab`, add
    [store listing copy](#4-store-listing-copy), 2+ phone screenshots (open the
    PWA in a narrow browser window and screenshot the reader), feature graphic
@@ -96,7 +97,7 @@ Bump in two places, then push:
 
 - `package.json` → `"version"`
 - `android/app/build.gradle` → `versionCode` (+1 each release) and `versionName`
-  (currently **2** / **1.1**)
+  (currently **3** / **1.2**)
 
 ## 6. Premium unlock ($1.99 one-time, Google Play Billing)
 
@@ -170,8 +171,21 @@ same build.
 4. Play Console → **Testing → Internal testing** → *Create new release*.
 5. Under *App signing*: accept Play App Signing (Google holds the release
    key from the first upload; your CI keystore is the upload key).
-6. Upload the `.aab`, name the release (e.g. *1.1 – billing bridge*), add
-   release notes, then **Review release → Start rollout to Internal testing**.
+6. Upload the `.aab`, name the release, add release notes, then
+   **Review release → Start rollout to Internal testing**.
+
+   Ready-to-paste v1.2 release notes:
+
+   > Back gesture now returns to your library while reading instead of
+   > closing the book view. Optional passphrase encryption for exported
+   > reading sessions. Imports show a completion summary with per-book
+   > size and chapter counts, and warn when a file is larger than the
+   > remaining storage space. Progress indicator now follows the fastest
+   > parse lane and never counts backwards. Settings can no longer be
+   > removed from the bottom bar. The app now updates itself to new
+   > versions without a manual reload.
+
+   (For v1.1 the release name was *1.1 – billing bridge*.)
 7. **Testers tab** → create an email list (your Gmail), copy the
    *opt-in link*, open it on your phone and accept. Install the app from
    the Play Store page that appears.
@@ -196,3 +210,34 @@ same build.
 the site; only the Android shell can sell, and an Android purchase is cached
 per device (`foliant-iap`). A cross-device sync backend could honor it on
 web later.
+
+## 7. Distributing Premium for free (promo codes & license testers)
+
+No code changes are needed — the bridge's `restore()` uses
+`queryPurchasesAsync(TYPE_INAPP)`, and a redeemed promo code creates a real
+$0 purchase of `foliant_premium`, so the existing startup probe and the
+*Restore purchase* button grant Premium automatically.
+
+**Promo codes (share with anyone):**
+
+1. Play Console → **Monetize → Promotions → Create promotion** → pick the
+   in-app product `foliant_premium`.
+2. Generate **single-use codes** (each code redeems once; subject to
+   Google's quarterly promotion quota).
+3. Send each person a code plus these instructions:
+   *Play Store → profile icon → Payments & subscriptions → Redeem code*,
+   or the direct link `https://play.google.com/redeem?code=XXXX`.
+   After redeeming, open Foliant — Premium is on (or tap *Restore
+   purchase* in Settings).
+
+**License testers (close collaborators / QA):** add their Gmail under
+**Monetize → Testing → License testing** — they buy Premium with Google's
+test card at $0, which also exercises the real purchase flow end to end.
+
+**Do not** add a built-in bypass (client-side license keys, dev unlock on
+production): Foliant has no server, so any client check is trivially
+crackable, and `FoliantDev.unlock()` is deliberately localhost-only.
+Promo codes are the legitimate, revocable path — refunded codes stop
+granting Premium on the next app start, because startup re-verifies with
+Play. Note the web app has no purchase path, so search / review / export
+are already free on github.io by design.

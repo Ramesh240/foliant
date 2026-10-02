@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2f5d50">
+<title>Foliant — Privacy policy</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; padding: 48px 20px 64px; max-width: 44rem;
+    background: #faf6ec; color: #2b2620;
+    font: 17px/1.65 Georgia, 'Times New Roman', serif;
+  }
+  h1, h2 { font-family: Georgia, serif; line-height: 1.25; }
+  h1 { font-size: 30px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 28px 0 8px; color: #2f5d50; }
+  p, li { margin: 8px 0; }
+  ul { padding-left: 22px; }
+  .updated { color: #7a7263; font-size: 14px; font-family: system-ui, sans-serif; margin: 0 0 24px; }
+  .card {
+    background: #fff; border: 1px solid #e4dcc8; border-radius: 12px;
+    padding: 14px 18px; margin: 0 0 8px;
+  }
+  .card b { color: #2f5d50; }
+  a { color: #2f5d50; }
+  code { font: 14px/1.4 ui-monospace, Consolas, monospace; background: #f1ead8; padding: 1px 5px; border-radius: 4px; }
+  .back { display: inline-block; margin-top: 32px; font-family: system-ui, sans-serif; font-size: 15px; }
+</style>
+</head>
+<body>
+
+<h1>Foliant — Privacy policy</h1>
+<p class="updated">Last updated: October 2, 2026</p>
+
+<div class="card">
+  <b>Short version:</b> Foliant has no servers, no accounts, no analytics and no
+  tracking. Your PDFs and everything Foliant derives from them never leave your
+  device.
+</div>
+
+<h2>What Foliant is</h2>
+<p>Foliant is a PDF reader that restructures text PDFs into a book layout. It runs
+entirely on your device — as a web app in your browser, or as an Android app that
+wraps the same local code. There is no Foliant server.</p>
+
+<h2>Your PDF files</h2>
+<p>PDFs you open are parsed locally, in your browser, using a copy of pdf.js that
+ships inside the app. Your files are never uploaded anywhere. Closing the app or
+clearing its storage removes them from your device.</p>
+
+<h2>What is stored on your device</h2>
+<ul>
+  <li><b>Your shelf:</b> books you keep are stored in your browser's IndexedDB
+      (Android app: in the app's private storage) so they reopen after a restart.</li>
+  <li><b>Settings, highlights and notes:</b> stored locally in your browser
+      (localStorage/IndexedDB), per device and per browser.</li>
+  <li><b>Session export files:</b> when you export a reading session, the file is
+      written wherever you choose on your own device. If you set a passphrase, it
+      is encrypted on-device with standard Web Crypto (AES-GCM); the passphrase is
+      never stored, sent, or recoverable by anyone but you.</li>
+</ul>
+<p>Deleting the app's data — or clearing site data in your browser — erases all of
+the above permanently.</p>
+
+<h2>What we never do</h2>
+<ul>
+  <li>No analytics, telemetry, crash reporting or advertising.</li>
+  <li>No accounts, no sign-ups, no cookies beyond the local storage described above.</li>
+  <li>No requests to any Foliant-owned server. After the app loads (from GitHub
+      Pages or the Play Store), it works fully offline.</li>
+</ul>
+
+<h2>Purchases (Android app)</h2>
+<p>The optional one-time Premium unlock is sold through Google Play Billing. The
+purchase flow, payment details and receipts are handled entirely by Google; they
+are governed by <a href="https://policies.google.com/privacy">Google's privacy
+policy</a>. Foliant never sees your payment information. To confirm your
+entitlement (including after reinstalls), the app asks Google Play on your device
+whether your Google account owns the purchase — that check happens between your
+device and Google, and Foliant stores only a local yes/no flag.</p>
+
+<h2>Changes to this policy</h2>
+<p>If the policy ever changes, the updated date above will change with it. Given
+how Foliant works — nothing leaves your device — changes are expected to be rare.</p>
+
+<h2>Contact</h2>
+<p>Questions or concerns? Open an issue at
+<a href="https://github.com/Ramesh240/foliant/issues">github.com/Ramesh240/foliant</a>.</p>
+
+<a class="back" href="./">&larr; Back to Foliant</a>
+
+</body>
+</html>

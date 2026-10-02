@@ -27,8 +27,8 @@ html = html.replace(
 );
 fs.writeFileSync(path.join(www, 'index.html'), html);
 
-/* manifest + service worker live at the bundle root */
-for (const f of ['manifest.webmanifest', 'sw.js']) {
+/* manifest + service worker + standalone pages live at the bundle root */
+for (const f of ['manifest.webmanifest', 'sw.js', 'privacy.html']) {
   fs.copyFileSync(path.join(root, f), path.join(www, f));
 }
 
