@@ -21,3 +21,15 @@
 
 /* Dimmed backdrop behind an open sheet */
 #veil{position:fixed;inset:0;background:#0006;z-index:8}
+
+/* Import summary, prepended at the top of the settings sheet
+   (ui.js showImportSummary; closeSheets removes it again). */
+#impSum{border:1px solid var(--acc);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+#impSum h4{margin:0 0 8px;color:var(--acc)}
+.improw{display:flex;justify-content:space-between;gap:12px;font:400 15px/1.4 Inter,sans-serif;padding:5px 0;border-bottom:1px solid var(--line)}
+.improw:last-of-type{border-bottom:0}
+.improw span{color:var(--mute);white-space:nowrap}
+
+/* Dismiss button, top-right of the customize sheet (js/nav.js). */
+.nnclose{display:flex;justify-content:flex-end}
+.nnclose button{padding:7px 14px;border-radius:10px;border:1px solid var(--line);font-weight:600;font-size:13px}

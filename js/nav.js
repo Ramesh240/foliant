@@ -20,14 +20,17 @@
 
    Depends on: S + applyS (config/utils), esc (utils), closeSheets and
    toggleFocus (ui.js), openSearch (search.js), openReview (review.js),
-   showHome (ui.js). Loaded after ui.js, before search.js.
+   showHome (ui.js). Loaded after ui.js, before search.js. Also owns the
+   back gesture (seq-tagged pushState on book open, popstate -> showHome;
+   Android hardware back arrives as a foliantBack event from MainActivity).
    ============================================================ */
 
 'use strict';
 
 /* Set true to preview the Premium layout (adds the Customize quick button)
-   without a store. Always ship false. (var, not const: the inline hook in
-   index.html reads it off window.) */
+   while reading — a pushState book entry makes the browser back button work.
+   Always ship false. (var, not const: the inline hook in index.html reads it
+   off window.) */
 var IAP_PREMIUM_PREVIEW = false;
 
 const NAV_DEFS = {
@@ -126,6 +129,7 @@ function openNavSheet() {
   const avail = NAV_DEFS.order.filter(a => !chosen.some(id => navBase(id) === a));
 
   $('#sNav').innerHTML =
+    '<div class="nnclose"><button type="button" id="navDone">Done</button></div>' +
     '<h4>Bottom bar</h4>' +
     '<div class="nnh">Bar style</div>' +
     '<div class="npv">' +
@@ -162,6 +166,14 @@ function navToggle(id, want) {
   }
 }
 
+/* Last line of defence against locking yourself out of Settings: if the bar
+   no longer contains a Settings entry (user unchecked 'set' and saved with a
+   pre-fix build), restore it as the final slot. Settings is the only way to
+   reach the Customize editor, so the bar must always offer it. */
+function navEnsureSettings() {
+  if (!S.nav.some(id => navBase(id) === 'set')) S.nav.push('set');
+}
+
 $('#sNav').addEventListener('click', e => {
   const mode = e.target.closest('[data-navmode]');
   if (mode) { S.navMode = mode.dataset.navmode; applyS(); openNavSheet(); return; }
@@ -169,12 +181,22 @@ $('#sNav').addEventListener('click', e => {
     S.nav = NAV_DEFAULT.slice(); S.navMode = 'labels';
     applyS(); openNavSheet();
   }
+  if (e.target.closest('#navDone')) closeSheets();
 });
 $('#sNav').addEventListener('change', e => {
   const box = e.target.closest('[data-nav]');
   if (!box) return;
+  /* Settings is the only way back to this editor — and to font, theme,
+     export and import — whenever the top bar is hidden, so it cannot be
+     removed. (Legacy bars missing it are repaired by navEnsureSettings.) */
+  if (!box.checked && navBase(box.dataset.nav) === 'set') {
+    box.checked = true;
+    window.alert('Settings stays in the bar: it is the only way back to this editor and to your reading settings.');
+    return;
+  }
   navToggle(box.dataset.nav, box.checked);
   if (!S.nav.length) { S.nav = NAV_DEFAULT.slice(); window.alert('Keep at least one button in the bar.'); }
+  navEnsureSettings();
   applyS(); openNavSheet();
 });
 
@@ -183,6 +205,7 @@ $('#sNav').addEventListener('change', e => {
 const _navApplyS = applyS;
 applyS = function () {
   navEnsure();
+  navEnsureSettings();   // repaired legacy bars keep a Settings entry
   if (S.navMode !== 'icons') S.navMode = 'labels';
   _navApplyS();
   const bar = $('#navb');
@@ -200,9 +223,60 @@ toggleFocus = function (btn) { _navToggleFocus(btn); navSync(); };
 const _navCloseSheets = closeSheets;
 closeSheets = function () { _navCloseSheets(); };
 
+/* ---------- Android / browser back gesture: book -> library ---------- */
+
 /* Show/hide the bar with the reader. */
 const _navShowHome = showHome;
 showHome = function () { _navShowHome(); $('#navb').classList.add('hide'); document.body.classList.remove('hasnav'); };
+
+/* Opening a book adds ONE history entry tagged { foliant: 'book', seq }.
+   The browser/app back control then lands on the library and popstate
+   returns to the shelf; Forward re-enters the still-loaded book.
+
+   Entries accumulate across open/back cycles and cannot be removed, so each
+   push is numbered: a popstate landing on the CURRENT book's entry re-enters
+   it, while a STALE entry (an earlier book from this session) or a home
+   entry means "leave the reader" -> navBack. Otherwise back from the second
+   book would resurrect the first one.
+
+   Android (Capacitor): the WebView history can be closed by the system
+   back-gesture dialog, so MainActivity ALSO dispatches foliantBack for
+   hardware + predictive back; navBack is idempotent so both paths can run.
+   On the shelf the event does nothing — the activity default (minimize or
+   exit) is preserved. */
+let navBookSeq = 0;   // increments on every push
+let navCurSeq = 0;    // seq of the book currently loaded in memory
+
+function navPushBook() {
+  navBookSeq++;
+  navCurSeq = navBookSeq;
+  try { history.pushState({ foliant: 'book', seq: navCurSeq }, '', location.href); } catch (e) {}
+}
+
+function navBack() {
+  if (!chapters.length || $('#reader').classList.contains('hide')) return false;
+  if (!$('#rvw').classList.contains('hide')) { $('#rvw').classList.add('hide'); return true; }
+  if (!$('#hbar').classList.contains('hide')) hideBar();
+  closeSheets();
+  showHome();
+  return true;
+}
+
+addEventListener('popstate', () => {
+  const st = history.state || {};
+  if (st.foliant === 'book' && st.seq === navCurSeq && chapters.length) {
+    /* Forward (or a refresh) onto the current book's own entry: re-enter it. */
+    if ($('#reader').classList.contains('hide')) {
+      $('#home').classList.add('hide');
+      $('#reader').classList.remove('hide');
+      $('#navb').classList.remove('hide');
+      document.body.classList.add('hasnav');
+    }
+    return;
+  }
+  navBack();   // stale book entry or home entry -> the library
+});
+addEventListener('foliantBack', () => { navBack(); });
 
 /* Called by main.js after a book opens successfully (main.js loads after
    nav.js, so it must invoke this explicitly rather than being wrapped). */
@@ -210,6 +284,7 @@ function navOnOpen() {
   $('#navb').classList.remove('hide');
   navRender();
   navSync();
+  navPushBook();   // give the back gesture a library entry to land on
 }
 
 /* Called by js/iap.js when a Premium subscription becomes active: add the

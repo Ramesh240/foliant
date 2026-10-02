@@ -92,7 +92,7 @@ function openSheet(s) {
   $(s).classList.remove('hide');
   $('#veil').classList.remove('hide');
 }
-function closeSheets() { ['#sToc', '#sSet', '#sHl', '#sNote', '#sSearch', '#sNav', '#sIap', '#veil'].forEach(s => $(s).classList.add('hide')); }
+function closeSheets() { ['#sToc', '#sSet', '#sHl', '#sNote', '#sSearch', '#sNav', '#sIap', '#veil'].forEach(s => $(s).classList.add('hide')); const sm = $('#impSum'); if (sm) sm.remove(); }
 
 $('#veil').onclick = closeSheets;
 $('#lb').onclick = () => $('#lb').classList.add('hide');
@@ -203,26 +203,67 @@ $('#bPrem').onclick = () => iapUnlockSheet();   // no arg -> full Premium pitch
 
 /* ---------- Whole-session export / import (library.js) ----------
    One JSON file: shelf books (bytes included), parsed-model caches,
-   highlights/notes/ratings and exact positions. */
+   highlights/notes/ratings and exact positions. Export optionally seals
+   the file with a passphrase (AES-GCM — sessionSeal in library.js). */
 $('#bExp').onclick = async () => {
   const btn = $('#bExp');
   try {
     btn.textContent = 'Packing…';
     const snap = await sessionExport();
+    let env = snap;
+    const pass = window.prompt('Optional: encrypt this file with a passphrase.\n\nLeave empty to export it unencrypted:');
+    if (pass) {
+      btn.textContent = 'Encrypting…';
+      env = await sessionSeal(snap, pass);
+    }
     const stamp = new Date().toISOString().slice(0, 10);
-    const blob = new Blob([JSON.stringify(snap)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(env)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'foliant-session-' + stamp + '.json';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    btn.textContent = 'Exported ✓';
+    btn.textContent = env.enc ? 'Exported ✓ (encrypted)' : 'Exported ✓';
   } catch (e) {
     btn.textContent = 'Export failed';
   }
   setTimeout(() => { btn.textContent = 'Export reading session'; }, 2200);
 };
 $('#bImp').onclick = () => $('#impFile').click();
+/* Would this session file fit in the storage that's left? Estimates via
+   navigator.storage (Chrome/Android); silently allows when unavailable. */
+async function warnSessionStorage(need) {
+  let free = null;
+  try {
+    if (navigator.storage && navigator.storage.estimate) {
+      const est = await navigator.storage.estimate();
+      if (typeof est.quota === 'number') free = Math.max(0, est.quota - (est.usage || 0));
+    }
+  } catch (e) {}
+  if (free == null || need <= free) return true;
+  const have = free >= 1048576 ? (free / 1048576).toFixed(0) + ' MB' : Math.max(1, Math.round(free / 1024)) + ' KB';
+  return confirm('This session file needs about ' + (need / 1048576).toFixed(1) +
+    ' MB but only about ' + have + ' of storage is left.\n\nImport anyway?');
+}
+
+/* 'Import complete' summary, prepended into the settings sheet (never
+   replaces its controls); closeSheets removes it again. */
+function showImportSummary(n, rows) {
+  let d = $('#impSum');
+  if (d) d.remove();
+  d = document.createElement('div');
+  d.id = 'impSum';
+  d.innerHTML = '<h4>Import complete: ' + n + ' book' + (n === 1 ? '' : 's') + ' restored</h4>' +
+    (rows || []).map(r => '<div class="improw"><b>' + esc(r.title) + '</b><span>' + esc(r.mb) +
+      (r.chapters ? ' · ' + r.chapters + ' ch' : '') + '</span></div>').join('') +
+    '<div class="row"><button id="impOk">Done</button></div>';
+  /* openSheet first: it runs closeSheets, which would remove a summary
+     inserted before it. */
+  openSheet('#sSet');
+  $('#sSet').insertBefore(d, $('#sSet').firstChild);
+  $('#impOk').onclick = closeSheets;
+}
+
 $('#impFile').onchange = async e => {
   const f = e.target.files[0];
   e.target.value = '';                       // allow re-picking the same file
@@ -230,11 +271,28 @@ $('#impFile').onchange = async e => {
   const btn = $('#bImp');
   try {
     btn.textContent = 'Importing…';
-    const snap = JSON.parse(await f.text());
-    await sessionImport(snap);
+    const env = JSON.parse(await f.text());
+    if (!env || env.app !== 'foliant-session') throw new Error('Not a Foliant session file');
+    let pass = null;
+    if (env.enc) {
+      pass = window.prompt('This session file is encrypted. Enter its passphrase:');
+      if (pass === null) throw new Error('cancelled');        // user backed out
+      if (!pass) throw new Error('Passphrase required');
+    }
+    /* Encrypted files: ciphertext b64 is exact (3/4 of its length); plain
+       files: the picked file itself. Refusing saves a doomed write. */
+    if (!await warnSessionStorage(env.enc ? env.ct.length * 3 / 4 : f.size)) throw new Error('cancelled');
+    const snap = await sessionOpen(env, pass);
+    const out = await sessionImport(snap);
     btn.textContent = 'Imported ✓';
+    showImportSummary(out.restored.length, out.restored);
   } catch (err) {
-    btn.textContent = err && /Not a Foliant/.test(err.message) ? 'Not a session file' : 'Import failed';
+    const m = (err && err.message) || '';
+    btn.textContent =
+      m === 'cancelled' ? 'Import cancelled' :
+      /Not a Foliant/.test(m) ? 'Not a session file' :
+      /Wrong passphrase/.test(m) ? 'Wrong passphrase' :
+      /Passphrase required/.test(m) ? 'Passphrase required' : 'Import failed';
   }
   setTimeout(() => { btn.textContent = 'Import reading session'; }, 2600);
 };

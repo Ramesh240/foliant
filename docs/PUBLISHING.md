@@ -148,10 +148,11 @@ On plain web there is still no purchase path: web users get the features free
 and the dev helper `FoliantDev.unlock()` / `FoliantDev.lock()` (localhost only)
 simulates the purchase for UI testing.
 
-### 6.3 Testing checklist — internal testing release, step by step
+### 6.3 Internal testing checklist — step by step
 
-Current state: versionCode **2**, versionName **1.1**; the Billing bridge
-(`FoliantBillingPlugin`) ships in the APK; the web app is deployed with the
+Current state: versionCode **3**, versionName **1.2**; the Billing bridge
+(`FoliantBillingPlugin`) ships in the APK; hardware + predictive back return
+to the library while a book is open; the web app is deployed with the
 same build.
 
 **Before you can upload anything** — Play developer account:
@@ -174,16 +175,20 @@ same build.
 7. **Testers tab** → create an email list (your Gmail), copy the
    *opt-in link*, open it on your phone and accept. Install the app from
    the Play Store page that appears.
+8. **Back-gesture check**: open a book, then swipe the system back
+   gesture (or press back) — Foliant must return to the library, not exit;
+   back on the library screen exits as usual. Open a book again and repeat
+   once more (the second cycle exercises the stacked history entries).
 
 **Purchase testing (needs the product from §6.1 to be ACTIVE):**
 
-8. In Play Console → **Monetize → Testing → License testing**, add the same
+9. In Play Console → **Monetize → Testing → License testing**, add the same
    Gmail so purchases use test cards instead of real money.
-9. On the phone: open Foliant → Settings → *Foliant Premium* → *Unlock with
-   Google Play* → complete the test purchase.
-10. Kill + reopen the app → Premium still on (cached, re-verified against
+10. On the phone: open Foliant → Settings → *Foliant Premium* → *Unlock with
+    Google Play* → complete the test purchase.
+11. Kill + reopen the app → Premium still on (cached, re-verified against
     Play at startup via the bridge's `restore()`).
-11. Test the refund path: Play Console → **Order management** → refund the
+12. Test the refund path: Play Console → **Order management** → refund the
     test order → reopen the app → Premium should drop (startup `restore()`
     no longer confirms ownership).
 

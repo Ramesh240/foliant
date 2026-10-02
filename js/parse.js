@@ -91,16 +91,27 @@ async function imgBoxes(pg) {
       .map(v => Math.round(v*10)/10));
 }
 
-/* Progress message, throttled: a textContent write on the visible #msg
-   forces style/layout work, and doing that once per page cost ~750ms on a
-   320-page book — more than a worker lane saves. Update at most every
-   150ms (and always the final page). */
-let parseMsgAt = 0;
+/* Progress message, throttled and monotonic across worker lanes.
+   A textContent write on the visible #msg forces style/layout work, and
+   doing that once per page cost ~750ms on a 320-page book — more than a
+   worker lane saves. Two more rules keep the count honest when lanes run:
+   parseHigh is a shared high-water mark so a slower lane can never drag
+   the message backwards ('page 9' after 'page 200'), and the final page
+   always gets through the throttle. getPage(n) returns the n-th page of
+   the flattened page tree (linearized files included), so the p handed
+   in is already the absolute 1-based book page. */
+let parseMsgAt = 0;   // timestamp of the last write, shared by every lane
+let parseHigh = 0;    // highest page written so far, shared by every lane
+
 function parseProgress(msg, p, total) {
   if (!msg) return;
   const now = performance.now();
-  if (now - parseMsgAt < 150 && p !== total) return;
+  if (p !== total) {
+    if (now - parseMsgAt < 150) return;   // throttle
+    if (p < parseHigh) return;            // a slower lane is behind the reported page
+  }
   parseMsgAt = now;
+  if (p > parseHigh) parseHigh = p;
   msg.textContent = `Reading page ${p} of ${total}…`;
 }
 
@@ -234,6 +245,7 @@ async function parse(buf) {
   const pdf = await pdfjsLib.getDocument({ data: buf.slice(0), verbosity: 0 }).promise;
   PDFDOC = pdf;
   const N = pdf.numPages, msg = $('#msg');
+  parseMsgAt = 0; parseHigh = 0;   // fresh book: the first page writes immediately
   const W = typeof pdfjsLib.PDFWorker === 'function' && N >= parseMINPAGES ? parseLANES() : 1;
 
   if (W === 1) {

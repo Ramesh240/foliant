@@ -121,9 +121,60 @@ const b64 = {
   }
 };
 
+/* utf8-safe decode of an embedded payload (the PDF bytes use raw b64.dec). */
+const b64Str = str => new TextDecoder().decode(b64.dec(str));
+
 /* localStorage keys that belong to the session: per-book positions and
    global reading prefs. Flags (shelf-on, migration markers) and the
    store-bound entitlement (foliant-iap) stay device-local on purpose. */
+
+/* ---------- Optional AES-GCM encryption for session files ----------
+   Export can seal the snapshot with a passphrase: PBKDF2-SHA256 (310k
+   iterations, 16-byte random salt) stretches it into an AES-GCM-256 key.
+   An encrypted file holds {app:'foliant-session', enc:true, v:2, kdf,
+   salt, iv, ct} with ct = the encrypted JSON snapshot. The passphrase is
+   never stored or transmitted — it exists only while encrypting or
+   decrypting. The v1 plaintext shape (snapshot at top level) stays
+   importable unchanged. */
+const SESSION_KDF = { name: 'PBKDF2', hash: 'SHA-256', iterations: 310000 };
+
+async function sessionKey(pass, salt) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  /* The per-file random salt belongs in the derive params (Pbkdf2Params needs
+     it), not in the shared template. */
+  return crypto.subtle.deriveKey(Object.assign({ salt }, SESSION_KDF), key,
+    { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+
+/* seal: snapshot object -> encrypted envelope (fresh salt + IV every time). */
+async function sessionSeal(snap, pass) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await sessionKey(pass, salt);
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key,
+    new TextEncoder().encode(JSON.stringify(snap)));
+  return { app: 'foliant-session', enc: true, v: 2, kdf: SESSION_KDF,
+           salt: b64.enc(salt), iv: b64.enc(iv), ct: b64.enc(ct) };
+}
+
+/* open: envelope (v2, encrypted) or plain snapshot (v1) -> snapshot object.
+   A wrong passphrase fails AES-GCM authentication here, surfacing as a
+   friendly 'Wrong passphrase' error. */
+async function sessionOpen(env, pass) {
+  if (!env || env.app !== 'foliant-session') throw new Error('Not a Foliant session file');
+  if (!env.enc) return env;   // v1 plaintext file
+  if (!env.ct || !env.salt || !env.iv || !env.kdf) throw new Error('Not a Foliant session file');
+  let pt;
+  try {
+    const key = await sessionKey(pass, b64.dec(env.salt));
+    pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64.dec(env.iv) }, key, b64.dec(env.ct));
+  } catch (e) {
+    throw new Error('Wrong passphrase');
+  }
+  const snap = JSON.parse(new TextDecoder().decode(pt));
+  if (!snap || snap.app !== 'foliant-session') throw new Error('Not a Foliant session file');
+  return snap;
+}
 const SESSION_LS = [/^foliant-pos-/, /^foliant-spot-/, /^foliant-s$/, /^foliant-wpm$/];
 
 /* Gather everything, resolve when the snapshot is complete. */
@@ -154,12 +205,14 @@ async function sessionExport() {
 }
 
 /* Restore a snapshot: replaces matching rows, keeps anything not mentioned
-   in the file (so a partial export never deletes existing books). */
+   in the file (so a partial export never deletes existing books).
+   Returns { restored: [{key, title, mb, chapters}] } for the import summary. */
 async function sessionImport(snap) {
   if (!snap || snap.app !== 'foliant-session' || !Array.isArray(snap.meta)) {
     throw new Error('Not a Foliant session file');
   }
   const db = await shelfDb();
+  const restored = [];
   await new Promise((res, rej) => {
     const tx = db.transaction(['meta', 'data', 'model', 'user'], 'readwrite');
     const m = tx.objectStore('meta'), d = tx.objectStore('data'),
@@ -169,7 +222,18 @@ async function sessionImport(snap) {
     (snap.user || []).forEach(r => r && r.key && u.put(r));
     (snap.data || []).forEach(r => {
       if (!r || !r.key || typeof r.b64 !== 'string') return;
-      try { d.put({ key: r.key, buf: b64.dec(r.b64) }); } catch (e) {}
+      try {
+        d.put({ key: r.key, buf: b64.dec(r.b64) });
+        /* Per-book summary row: base64 length -> exact byte count. */
+        const meta = (snap.meta || []).find(x => x && x.key === r.key);
+        const bytes = Math.floor(r.b64.length * 3 / 4);
+        const mb = bytes >= 1048576
+          ? (bytes / 1048576).toFixed(1).replace(/\.0$/, '') + ' MB'
+          : Math.max(1, Math.round(bytes / 1024)) + ' KB';
+        restored.push({ key: r.key,
+          title: (meta && meta.title) || String(r.key).replace(/\.pdf$/i, ''),
+          mb, chapters: (meta && meta.chapters) || 0 });
+      } catch (e) {}
     });
     tx.oncomplete = res;
     tx.onerror = () => rej(tx.error);
@@ -179,6 +243,7 @@ async function sessionImport(snap) {
      does not mention keep their local values). */
   try { (snap.ls || []).forEach(r => { if (r && r.k) localStorage.setItem(r.k, r.v); }); } catch (e) {}
   shelfRender();
+  return { restored };
 }
 
 /* One-time migration: keep chapter positions of books read before the shelf. */
