@@ -4,7 +4,7 @@
    - Fetch:   cache-first for same-origin GETs; network fallback + runtime cache.
    - Navigations: network-first, fall back to the cached shell (offline support).
    Version bump (CACHE name) forces old caches out on the next load. */
-const CACHE = 'foliant-v14';
+const CACHE = 'foliant-v15';
 const SHELL = [
   './',
   'index.html',
@@ -27,6 +27,12 @@ self.addEventListener('activate', e => {
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
+});
+
+/* Version handshake: the page asks which version is running so it can detect
+   an update even when claim() fired before its listener was attached. */
+self.addEventListener('message', e => {
+  if (e.data === 'foliant-version?') e.source.postMessage('foliant-version:' + CACHE);
 });
 
 self.addEventListener('fetch', e => {

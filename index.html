@@ -137,22 +137,44 @@
 </script>
 
 <!-- PWA: register the offline service worker (http/https only — skipped on file://).
-     Auto-update: sw.js installs with skipWaiting(), so a new version claims the
-     page mid-session; the old DOM would then run against new code until the
-     next manual reload. If a controller already existed (i.e. this was an
-     update, not a first install), reload once so the page re-boots on the new
-     worker immediately. Reading progress survives: it is saved to storage on
-     every turn of the page. -->
+     Auto-update: sw.js installs with skipWaiting(), so a new version can claim
+     the page while the old DOM keeps running old code until the next manual
+     reload — returning visitors saw one stale render per deploy. The page now
+     handshakes with the controlling worker ('foliant-version?') and reloads
+     once when a different version takes over. The claimed flag separates two
+     cases: the booting worker answering its ping (just record the version)
+     versus a new worker answering after controllerchange (an update — reload).
+     Old workers predate the handshake and stay silent, so their only trace is
+     the claim itself, which is exactly when the reload must happen. Guarded
+     against loops via sessionStorage; first-ever installs never reload.
+     Reading progress survives the reload: it is saved on every page turn. -->
 <script>
 if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
   addEventListener('load', () => {
-    const hadController = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!hadController || sessionStorage.getItem('foliant-sw-reload')) return;
+    const sw = navigator.serviceWorker;
+    const hadController = !!sw.controller;
+    let cur = null;       // cache version this page booted on (null: old/silent worker)
+    let claimed = false;  // a worker took control after boot
+    const reloadOnce = () => {
+      if (sessionStorage.getItem('foliant-sw-reload')) return;
       sessionStorage.setItem('foliant-sw-reload', '1');
       location.reload();
+    };
+    const onVersion = v => {
+      if (cur === null) {
+        if (claimed && hadController) return reloadOnce();
+        cur = v;
+        return;
+      }
+      if (v !== cur && hadController) reloadOnce();
+    };
+    const ping = w => { try { w.postMessage('foliant-version?'); } catch (e) {} };
+    sw.addEventListener('message', e => {
+      if (typeof e.data === 'string' && e.data.indexOf('foliant-version:') === 0) onVersion(e.data.slice(16));
     });
+    if (sw.controller) ping(sw.controller);
+    sw.addEventListener('controllerchange', () => { claimed = true; if (sw.controller) ping(sw.controller); });
+    sw.register('sw.js').catch(() => {});
   });
 }
 </script>
