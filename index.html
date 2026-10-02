@@ -136,10 +136,24 @@
 }
 </script>
 
-<!-- PWA: register the offline service worker (http/https only — skipped on file://). -->
+<!-- PWA: register the offline service worker (http/https only — skipped on file://).
+     Auto-update: sw.js installs with skipWaiting(), so a new version claims the
+     page mid-session; the old DOM would then run against new code until the
+     next manual reload. If a controller already existed (i.e. this was an
+     update, not a first install), reload once so the page re-boots on the new
+     worker immediately. Reading progress survives: it is saved to storage on
+     every turn of the page. -->
 <script>
 if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
-  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  addEventListener('load', () => {
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || sessionStorage.getItem('foliant-sw-reload')) return;
+      sessionStorage.setItem('foliant-sw-reload', '1');
+      location.reload();
+    });
+  });
 }
 </script>
 </body>
