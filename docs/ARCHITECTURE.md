@@ -220,4 +220,7 @@ also invalidates the cache row for re-imported files.
   complex layouts may reorder text.
 - Heading detection is heuristic: unusual typography (e.g. headings smaller than
   body text) can produce fewer chapters than expected.
-- DRMed PDFs will fail pdf.js parsing and surface as "password protected or damaged".
+- DRMed PDFs are classified at open time: a password-protected file says so and
+  points at removing the password; a structurally invalid file reports damage;
+  anything unexpected falls back to the generic "password protected or damaged"
+  message (the real exception is always in the console).

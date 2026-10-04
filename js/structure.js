@@ -8,6 +8,22 @@
 
 'use strict';
 
+/* Clean up a chapter title assembled from stacked heading lines. Cover and
+   front-matter pages glue title, subtitle and "BY <author>" into one long
+   string with stray separators ("PSYCHO- CYBERNETICS,: A New Way…: BY:
+   MAXWELL: MALTZ"); this reattaches split hyphenated words, drops the BY
+   author run on long stacked titles, and trims trailing separators — while
+   leaving real chapter headings ("Chapter One: The Forest") untouched. */
+function cleanTitle(t) {
+  t = t.replace(/\s+/g, ' ').trim();
+  t = t.replace(/([A-Za-z])- (?=[A-Za-z])/g, '$1-');   // "PSYCHO- CYBERNETICS" -> "PSYCHO-CYBERNETICS"
+  /* Drop the "BY <author>" run on long stacked cover titles. Short headings
+     and lowercase "by" phrases ("Down by the Bay") are left alone. */
+  const by = t.match(/\bBY\b[\s:;.,]+(\S.*)$/);
+  if (by && t.length > 40 && by.index >= 15) t = t.slice(0, by.index);
+  return t.replace(/[\s:;,]+$/, '');
+}
+
 function build(L) {
   /* ---- 1. Body-text size: the font height carrying the most characters. ---- */
   const cnt = {};
@@ -135,8 +151,13 @@ function build(L) {
     : lv.find(k => tw/ck(k) <= 7000) || lv[lv.length-1] || (ck('h1') ? 'h1' : ck('h2') ? 'h2' : null);
 
   const C = []; let c = { title:'Beginning', b:[], run:0 };
-  const sep = t => /^(the|a|an)$/i.test(t) ? ' ' : /^[IVXLC]+$/.test(t) ? '. '
-    : /[.:]$/.test(t) ? ' ' : ': ';
+  const sep = (t, next) => /-$/.test(t) ? ''
+    : /^(the|a|an)$/i.test(t) ? ' '
+    : /^by$/i.test(next || '') ? ' '
+    : /^[IVXLC]+$/.test(t) ? '. '
+    : /\bBY$/.test(t) ? ' '
+    : /[.,:;!?]$/.test(t) ? ' '
+    : ': ';
 
   for (const b of B) {
     const hd = b.k === 'h1' || b.k === 'h2' || b.k === 'h3';
@@ -144,17 +165,20 @@ function build(L) {
       /* A heading following an empty chapter on the same page extends its title
          ("Chapter 3" + "The Theory" -> "Chapter 3: The Theory"). */
       if (c.run && !c.b.length && c.pg === b.pg) {
-        c.title += (c.h === b.h && c.y - b.y < gapBase*1.6 ? ' ' : sep(c.title)) + b.t;
+        c.title += (c.h === b.h && c.y - b.y < gapBase*1.6 ? ' ' : sep(c.title, b.t)) + b.t;
         c.h = b.h; c.y = b.y;
       } else {
         if (c.b.length || C.length || c.run) C.push(c);
         c = { title: b.t, b: [], run: 1, pg: b.pg, h: b.h, y: b.y };
       }
     }
-    else if (hd && c.run && !c.b.length && c.run < 3) { c.title += sep(c.title) + b.t; c.run++; }
+    else if (hd && c.run && !c.b.length && c.run < 3) { c.title += sep(c.title, b.t) + b.t; c.run++; }
     else c.b.push(b);
   }
   C.push(c);
+
+  /* ---- 4.5 Tidy glued titles (covers stack title/subtitle/BY author). ---- */
+  C.forEach(ch => { ch.title = cleanTitle(ch.title); });
 
   /* ---- 5. Cleanup: drop the empty prologue; split huge chapterless books. ---- */
   const out = [];

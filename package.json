@@ -4,6 +4,7 @@
   "description": "Foliant — turn any PDF into a book. Client-side PDF reader with chapters, highlights and flashcards.",
   "private": true,
   "scripts": {
+    "test": "node tools/test-structure.js",
     "serve": "node tools/serve.js",
     "sample": "node tools/make_sample_pdf.js",
     "icons": "node tools/make_icons.js",

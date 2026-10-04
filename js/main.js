@@ -55,8 +55,14 @@ async function openFromBuffer(key, buf, resume) {
     if (want) restoreScroll(want);
     return true;
   } catch (err) {
-    console.error('Foliant open failed:', err);   // the message is a catch-all; keep the real cause visible
-    $('#msg').textContent = 'Could not read this PDF. It may be password protected or damaged.';
+    console.error('Foliant open failed:', err);   // keep the real cause visible for diagnosis
+    /* Classify the common pdf.js failures so the reader gets real guidance
+       instead of one catch-all. Scanned-image PDFs never reach this catch:
+       parse() returns no lines and the "scanned images" message shows above. */
+    $('#msg').textContent =
+      err && err.name === 'PasswordException' ? 'This PDF is password protected. Foliant can\u2019t open encrypted files; remove the password (e.g. print it to a new PDF) and try again.' :
+      err && (err.name === 'InvalidPDFException' || err.name === 'FormatError') ? 'This file is damaged or isn\u2019t really a PDF, so Foliant couldn\u2019t read it.' :
+      'Could not read this PDF. It may be password protected or damaged.';
     return false;
   }
 }
