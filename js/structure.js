@@ -25,6 +25,13 @@ function build(L) {
     }
   }
 
+  /* Highest page number in the book, used to sanity-check bare page
+     references in TOC entries (a trailing number larger than the page
+     count is not a page). Without this, any TOC entry that ends in a
+     number but has no dot leaders threw a ReferenceError and the whole
+     open failed with "Could not read this PDF". */
+  const maxPg = L.reduce((m, l) => Math.max(m, l.pg || 0), 0);
+
   /* ---- 2. Learn the page grid: line gap and left margin. ---- */
   const gp = {}, xs = {}, top1 = o => +Object.keys(o).sort((a, b) => o[b] - o[a])[0];
   L.forEach((l, i) => {

@@ -55,6 +55,7 @@ async function openFromBuffer(key, buf, resume) {
     if (want) restoreScroll(want);
     return true;
   } catch (err) {
+    console.error('Foliant open failed:', err);   // the message is a catch-all; keep the real cause visible
     $('#msg').textContent = 'Could not read this PDF. It may be password protected or damaged.';
     return false;
   }
