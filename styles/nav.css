@@ -7,11 +7,12 @@
    Bar visibility (Settings → On-screen bars, S.chrome in utils.js):
      html[data-chrome="both"]    top bar + bottom nav
      html[data-chrome="top"]     top bar only — bottom nav hidden
-     html[data-chrome="bottom"]  bottom nav only — top bar hidden on
-                                 touch devices (desktop keeps the top
-                                 bar, which carries hover menus); the
-                                 reading-progress line rides the nav
-                                 bar's top edge as a hairline
+     html[data-chrome="bottom"]  bottom nav only (the default on every
+                                 device) — the top bar's buttons are
+                                 hidden and the reading-progress line
+                                 rides the nav bar's top edge as a
+                                 hairline; the bottom nav's Library slot
+                                 closes the book
    ============================================================ */
 
 /* Height of the bottom nav bar's button row (safe-area inset adds on top).
@@ -23,22 +24,37 @@
 html[data-chrome="top"] #navb{display:none!important}
 html[data-chrome="top"] body.hasnav #book{padding-bottom:120px}
 
-@media(pointer:coarse){
-  /* Bottom-only reading: the top bar's buttons go away, but its progress
-     line stays as a fixed hairline riding the nav bar's top edge. #top must
-     drop its backdrop-filter — a filter makes it a containing block, which
-     would anchor the fixed hairline to #top instead of the viewport. */
-  html[data-chrome="bottom"] #top{position:static;border-bottom:0;background:none;backdrop-filter:none}
-  html[data-chrome="bottom"] #bar{display:none}
-  html[data-chrome="bottom"] #prog{
-    position:fixed;left:0;right:0;z-index:7;
-    bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px));
-    background:transparent;box-shadow:0 -1px 5px #0001;
-  }
-  html[data-chrome="bottom"] #book{scroll-padding-top:12px}
+/* Bottom-only reading (the default on every device): the top bar's buttons
+   go away, but its progress line stays as a fixed hairline riding the nav
+   bar's top edge. #top must drop its backdrop-filter — a filter makes it a
+   containing block, which would anchor the fixed hairline to #top instead
+   of the viewport. Applies to desktop too: the bottom nav's Library slot
+   closes the book, and sheets (z-index 9) still overlay the bar. */
+html[data-chrome="bottom"] #top{position:static;border-bottom:0;background:none;backdrop-filter:none}
+html[data-chrome="bottom"] #bar{display:none}
+html[data-chrome="bottom"] #prog{
+  position:fixed;left:0;right:0;z-index:7;
+  bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px));
+  background:transparent;box-shadow:0 -1px 5px #0001;
 }
-@media(hover:hover) and (pointer:fine){
-  html[data-chrome="bottom"] #top #bar button:not(#bNew){display:none}
+html[data-chrome="bottom"] #book{scroll-padding-top:12px}
+
+/* ---------- Fluid chrome ----------
+   Theme switches cross-fade instead of snapping, and the chrome bars
+   glide into place whenever they (re)enter the layout — opening a book
+   or switching Both / Top / Bottom in Settings. display toggles can't
+   transition, so reveals use keyframes (they restart when an element
+   re-enters the layout). All motion is skipped for readers who prefer
+   reduced motion. */
+@media(prefers-reduced-motion:no-preference){
+  body,#top,#navb,.sheet{
+    transition:background-color .3s ease,color .3s ease,border-color .3s ease;
+  }
+  body.hasnav #book{transition:padding-bottom .3s ease}
+  #navb:not(.hide){animation:navUp .3s cubic-bezier(.2,.7,.3,1)}
+  #bar{animation:barDown .3s cubic-bezier(.2,.7,.3,1)}
+  @keyframes navUp{from{transform:translateY(100%)}}
+  @keyframes barDown{from{opacity:0;transform:translateY(-14px)}}
 }
 
 /* ---------- Bottom navigation bar ---------- */

@@ -27,6 +27,9 @@ function applyS() {
   root.dataset.chrome = S.chrome;
   root.dataset.theme = S.t;
   root.dataset.font = S.f;
+  /* Keep the browser/OS chrome color in step with the active theme. */
+  const mt = document.querySelector('meta[name="theme-color"]');
+  if (mt) mt.content = getComputedStyle(root).getPropertyValue('--bg').trim();
   root.style.setProperty('--fs', S.fs + 'px');
   $('#fs').value = S.fs;
   $('#bQa').textContent = 'Q&A cards: ' + (S.qa ? 'on' : 'off');

@@ -29,16 +29,25 @@ let focus = false;      // focus mode toggle
 
 /* Reading settings, persisted to localStorage under 'foliant-s'.
    chrome: which on-screen bars are visible in the reader —
-   'both' | 'top' | 'bottom' (top = chapter bar, bottom = reading nav).
-   Phones and tablets start in 'bottom' (single-bar, thumb-reach reading:
-   nav.css hides the top bar on coarse pointers); desktops keep both bars.
-   Tapping a bar chip in Settings sets chromePicked, which pins the choice
-   on every later load. */
-let S = { fs: 20, t: 'paper', f: 'serif', qa: true, auto: true, chrome: 'both' };
+   'bottom' | 'top' | 'both' (default 'bottom': the single-bar,
+   thumb-reach reading layout on every device — the top bar's controls
+   all live in the bottom nav, whose Library slot closes the book).
+   Tapping a bar chip in Settings sets chromePicked, which pins the
+   choice on every later load.
+   sv: settings-shape version. v2 shipped night + bottom-only as the
+   defaults; users whose saved settings still match the v1 defaults
+   (never customized) are lifted to the new look exactly once. */
+let S = { fs: 20, t: 'night', f: 'serif', qa: true, auto: true, chrome: 'bottom', sv: 2 };
 try {
   const saved = JSON.parse(localStorage.getItem('foliant-s') || '{}');
   Object.assign(S, saved);
-  if (!saved.chromePicked && matchMedia('(pointer:coarse)').matches) S.chrome = 'bottom';
+  /* applyS() has persisted the settings since first launch, so anyone who
+     never opened Settings still carries the v1 defaults (paper + both
+     bars) in storage — migrate them; explicit choices are kept. */
+  if (!saved.sv) {
+    if (saved.t === 'paper') S.t = 'night';
+    if (!saved.chromePicked && saved.chrome === 'both') S.chrome = 'bottom';
+  }
 } catch (e) {}
 
 /* Flashcard ratings { cardId: 'done' | 'again' }, per book: 'foliant-r-<name>'. */
