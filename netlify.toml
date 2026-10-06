@@ -1,0 +1,23 @@
+# Netlify deployment: builds the offline bundle (same command the GitHub
+# Pages workflow runs) and serves it at the site root. All asset paths in
+# the app are relative, so the bundle needs no changes for root hosting.
+[build]
+  command = "node tools/copy-www.js"
+  publish = "www"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# The app shell and service worker must always revalidate so the SW
+# version handshake (foliant-vN install -> one auto-reload) reaches
+# devices on the next visit. Other assets use Netlify's default etag
+# revalidation, which is already SW-safe.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

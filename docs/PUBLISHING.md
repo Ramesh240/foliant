@@ -241,3 +241,26 @@ Promo codes are the legitimate, revocable path — refunded codes stop
 granting Premium on the next app start, because startup re-verifies with
 Play. Note the web app has no purchase path, so search / review / export
 are already free on github.io by design.
+
+## 8. Netlify (alternative web host)
+
+The repo ships `netlify.toml`, so connecting it to Netlify needs no extra
+setup: build command `node tools/copy-www.js`, publish directory `www`
+(already in the toml). All app asset paths are relative, so the bundle
+serves fine at a site root (`https://<site>.netlify.app/`) with no
+sub-path configuration.
+
+1. Netlify → **Add new site → Import an existing project → Deploy with
+   GitHub** → pick `Ramesh240/foliant`. Netlify reads `netlify.toml` and
+   deploys.
+2. Every push to `main` now deploys automatically, exactly like the
+   GitHub Pages workflow. Both hosts can stay live side by side.
+3. PWA specifics are handled: `sw.js` and `index.html` are served with
+   `Cache-Control: no-store`-equivalent revalidation headers (see the
+   `[[headers]]` blocks), so service-worker updates still reach devices.
+4. Custom domain: Netlify → **Domain management → Add a domain**, then
+   point a CNAME at `<site>.netlify.app`.
+
+CLI alternative (deploy from this machine without the dashboard):
+`npx netlify-cli deploy --build --prod --dir www` after `npx netlify-cli
+login`.
